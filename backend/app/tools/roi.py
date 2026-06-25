@@ -196,3 +196,69 @@ def breakdown(
             "monthly_emi_inr": grid,
         },
     }
+
+
+@tool
+def estimate_roi(
+    field: str,
+    country: str | None = None,
+    universities: list[str] | None = None,
+    loan_inr_lakh: float | None = None,
+    interest_rate: float | None = None,
+    tenure_years: int | None = None,
+) -> str:
+    """Estimate the financial ROI (cost vs salary vs EMI) of a degree, per university.
+
+    Call this when the student asks whether a degree is "worth it", about cost,
+    expected salary, or loan EMI — or right after shortlisting, to attach ROI to
+    the same schools (pass their names in `universities`).
+
+    Args:
+        field: Field of study, e.g. "Robotics", "Computer Science", "MBA".
+        country: "US" or "Canada". Omit if open to any.
+        universities: Optional list of university names to score (e.g. the ones you
+            just shortlisted). If omitted, matches by field/country.
+        loan_inr_lakh: Loan amount in INR lakh. Omit to assume 70% of total cost.
+        interest_rate: Annual loan interest %. Omit for the default (~10.5%).
+        tenure_years: Loan tenure in years. Omit for the default (8).
+
+    Returns a JSON string: per-university total cost, expected salary, monthly EMI,
+    EMI-to-income %, and payback years. All figures approximate — present as
+    guidance and say they are worth verifying.
+    """
+    return json.dumps(
+        roi(
+            field,
+            country=country,
+            universities=universities,
+            loan_inr_lakh=loan_inr_lakh,
+            interest_rate=(
+                interest_rate if interest_rate is not None else config.ROI_DEFAULT_INTEREST_RATE
+            ),
+            tenure_years=(
+                tenure_years if tenure_years is not None else config.ROI_DEFAULT_TENURE_YEARS
+            ),
+        )
+    )
+
+
+@tool
+def roi_breakdown(
+    university: str,
+    field: str,
+    loan_inr_lakh: float | None = None,
+) -> str:
+    """Detailed ROI for ONE university, with a loan rate x tenure EMI grid.
+
+    Call this when the student zooms into a single university and wants to see how
+    the monthly EMI changes across interest rates and repayment tenures.
+
+    Args:
+        university: The university name (e.g. "Arizona State University").
+        field: Field of study, e.g. "Computer Science".
+        loan_inr_lakh: Loan amount in INR lakh. Omit to assume 70% of total cost.
+
+    Returns a JSON string with the base-case ROI plus a sensitivity grid of
+    monthly EMIs across rates and tenures. All figures approximate.
+    """
+    return json.dumps(breakdown(university, field, loan_inr_lakh=loan_inr_lakh))

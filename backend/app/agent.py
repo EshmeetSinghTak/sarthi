@@ -22,9 +22,9 @@ from langgraph.prebuilt import ToolNode
 from . import memory
 from .llm import chat_llm, distill_facts
 from .prompts import SYSTEM_PROMPT
-from .tools import shortlist_universities
+from .tools import estimate_roi, roi_breakdown, shortlist_universities
 
-TOOLS = [shortlist_universities]
+TOOLS = [shortlist_universities, estimate_roi, roi_breakdown]
 _llm_with_tools = chat_llm.bind_tools(TOOLS)
 
 
