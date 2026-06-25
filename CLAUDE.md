@@ -35,7 +35,9 @@
 - `TaskStop` doesn't kill the dev server's child node → port 3000 lingers; free it via PowerShell `Get-NetTCPConnection -LocalPort 3000 ... Stop-Process`. After installing a frontend dep, delete `.next` (stale RSC manifest).
 - Commit `.gitignore` (incl. `.env`, `*.db`, `chroma_db/`) **before** the first `git add` so secrets never enter history.
 
-**Next up:** F3 — ROI Predictor (builds on F2's cost data).
+- **F3 — ROI Predictor:** done. Two agent tools over a new `backend/data/salary_priors.json` (field×country starting salaries from H1B LCA / levels.fyi + living costs): `estimate_roi` (per-university cost vs salary vs EMI vs payback, base case) and `roi_breakdown` (rate×tenure EMI sensitivity grid for one uni). Deterministic pure-Python math; all tunables centralized in `config.py` (FX, loan defaults, sensitivity grid, prestige coefficients) — **no hardcoded values** (standing user rule). First pytest suite in the repo (`backend/tests/`, 22 tests). Verified end-to-end against `meta/llama-3.3-70b`. Built via spec→plan→subagent-driven execution (`docs/superpowers/`).
+
+**Next up:** F4 — SOP Co-Pilot (Socratic, student-authored; free NVIDIA reasoning model, NOT Claude).
 
 ---
 
@@ -374,8 +376,8 @@ No external deadline. Build at own pace. Goal: portfolio piece + learning + poss
 - [x] Basic chat loop with persistent memory — via **LangGraph** (not Claude Agent SDK — see no-paid-LLM constraint in §0)
 - [x] Source universities seed dataset — `backend/data/universities.json` (~26 US + Canadian)
 - [x] Build F1 Conversational Agent Core — done
-- [x] F2 Shortlister — done · [ ] F3 ROI — next
-- [ ] Source public salary priors (levels.fyi scrape, H1B LCA data) — needed for F3
+- [x] F2 Shortlister — done · [x] F3 ROI — done · [ ] F4 SOP — next
+- [x] Source public salary priors (levels.fyi / H1B LCA) — done: `backend/data/salary_priors.json` (field×country)
 - [ ] Decide: SOP Co-Pilot approach (F4) — free NVIDIA reasoning model (deepseek-v4), NOT Claude
 - [x] Lock visual identity — twilight indigo + saffron, chakra signature, Fraunces/Inter/Noto Devanagari
 - [ ] Confirm Bhashini API access (or ElevenLabs Hindi voice as fallback) — voice deferred
