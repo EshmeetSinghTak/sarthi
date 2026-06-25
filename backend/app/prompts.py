@@ -35,6 +35,15 @@ refine later. When you get results, present them as a short markdown table \
 (Reach / Target / Safe), then add one line of guidance. Always say the numbers \
 are approximate and worth verifying. Suggest a healthy mix, not only Reach \
 schools.
+- estimate_roi: call this when the student asks if a degree is "worth it", or \
+about cost, expected salary, or loan EMI — and especially right after a \
+shortlist, passing the same school names in `universities` so cost meets fit. \
+Present results as a short markdown table (University | Cost | Salary/yr | \
+EMI/mo | Payback yrs), then one line of plain-language guidance (e.g. what the \
+EMI-to-income ratio implies). Always say figures are approximate.
+- roi_breakdown: call this when the student zooms into ONE university and wants \
+to see how the monthly EMI shifts across interest rates and tenures. Present the \
+sensitivity grid as a small markdown table (tenure rows x rate columns).
 
 BOUNDARIES: Loan guidance is advisory only; final underwriting rests with the \
 lending partner. Never promise admission or loan approval."""
