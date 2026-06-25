@@ -14,7 +14,10 @@ Counsellors charge ₹50k–₹2L and push universities that pay them. Education
 
 ## Status
 
-🚧 **Early build — personal/portfolio project.** Foundation scaffold in place; agent core next. No external deadline.
+🚧 **Early build — personal/portfolio project.** No external deadline.
+
+- ✅ **F1 — Conversational Agent Core** working end-to-end: LangGraph agent with SARTHI persona, streaming over SSE, per-thread conversation history, and **cross-session long-term memory** (distilled facts in Chroma, recalled in new sessions).
+- ⏭️ Next: frontend chat UI, then F2 University Shortlister.
 
 ## Stack
 
@@ -30,14 +33,30 @@ Counsellors charge ₹50k–₹2L and push universities that pay them. Education
 
 No Claude or paid LLMs — the project runs entirely on free providers.
 
-## Setup (backend smoke test)
+## Setup (backend)
+
+Requires Python 3.14 (3.11+ should work).
 
 ```bash
 cd backend
-cp .env.example .env        # then paste your NVIDIA_API_KEY
+python -m venv .venv
+source .venv/Scripts/activate      # Windows: .venv\Scripts\activate
+cp .env.example .env               # then paste your NVIDIA_API_KEY
 pip install -r requirements.txt
-python smoke_test.py        # should stream a SARTHI reply to "Hi, I'm Priya"
+
+python smoke_test.py               # 1-shot: streams a SARTHI reply
+uvicorn app.server:app --port 8000 # run the agent API
 ```
+
+Then talk to the agent:
+
+```bash
+curl -N -X POST http://127.0.0.1:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"user_id":"priya","message":"Hi, I want an MS in Robotics abroad."}'
+```
+
+`GET /memory/{user_id}` shows the long-term facts SARTHI has learned about a user.
 
 ## Roadmap
 

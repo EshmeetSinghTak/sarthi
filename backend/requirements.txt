@@ -1,7 +1,22 @@
-# SARTHI backend — Phase 1 foundation deps.
-# Kept minimal so it installs cleanly (incl. on Python 3.14).
-# Agent stack (langgraph, langchain-openai, chromadb, psycopg) is added
-# in the LangGraph step once wheel compatibility is confirmed.
+# SARTHI backend — top-level dependencies.
+# Pinned full transitive set lives in requirements.lock.txt.
+# Verified installing + importing on Python 3.14 (Windows).
 
-openai>=1.40.0
-python-dotenv>=1.0.1
+# LLM client (NVIDIA Build, OpenAI-compatible)
+openai>=2.0
+python-dotenv>=1.0
+
+# Agent framework + memory
+langgraph>=1.0
+langchain-openai>=1.0
+langgraph-checkpoint-sqlite>=2.0
+aiosqlite>=0.20
+
+# Vector store (long-term memory). We supply NVIDIA embeddings manually,
+# so Chroma's default ONNX embedder is never downloaded.
+chromadb>=1.5
+
+# API server with SSE streaming
+fastapi>=0.115
+uvicorn[standard]>=0.30
+sse-starlette>=2.0
