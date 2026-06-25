@@ -1,0 +1,30 @@
+{
+  "data_note": "Approximate median new-grad (master's) salaries for guidance only — NOT a guarantee. Sources: US H1B LCA disclosure medians + levels.fyi entry-level figures (USD/yr); Canada figures converted from CAD market medians. Living costs are rough annual estimates (tuition is separate, from universities.json). Always verify against current data.",
+  "currency": "USD",
+  "living_cost_usd_per_year": {
+    "US": 18000,
+    "Canada": 15000
+  },
+  "starting_salary_usd": {
+    "US": {
+      "Computer Science": 120000,
+      "AI/ML": 135000,
+      "Data Science": 115000,
+      "Robotics": 115000,
+      "Electrical Engineering": 100000,
+      "Mechanical Engineering": 85000,
+      "Civil Engineering": 72000,
+      "Business/MBA": 110000
+    },
+    "Canada": {
+      "Computer Science": 75000,
+      "AI/ML": 85000,
+      "Data Science": 72000,
+      "Robotics": 72000,
+      "Electrical Engineering": 68000,
+      "Mechanical Engineering": 62000,
+      "Civil Engineering": 58000,
+      "Business/MBA": 70000
+    }
+  }
+}
