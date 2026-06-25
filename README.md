@@ -1,0 +1,54 @@
+# SARTHI (सारथी)
+
+> **Your AI Sarthi — from dream to degree.**
+
+SARTHI is an agentic AI platform that guides Tier-2/3 Indian students end-to-end on their study-abroad journey — from *"where should I even go?"* to *"my loan is disbursed"* — in a single, memory-powered, vernacular conversation.
+
+**Not a chatbot. An agent.** Chatbots answer; SARTHI remembers, reasons, and takes action.
+
+---
+
+## Why this exists
+
+Counsellors charge ₹50k–₹2L and push universities that pay them. Education-loan NBFCs only show up at the very end. Generic AI chatbots have no memory, no India context, and no idea how an Indian student actually finances a degree abroad. SARTHI is built for **Priya from Nagpur** — first-in-family, thinks in Marathi-Hindi about big decisions, needs a guide for the full 12-month arc, not a transaction at the end.
+
+## Status
+
+🚧 **Early build — personal/portfolio project.** Foundation scaffold in place; agent core next. No external deadline.
+
+## Stack
+
+| Layer | Choice |
+|-------|--------|
+| Agent framework | LangGraph (Python) |
+| LLMs | LLM-agnostic via NVIDIA Build (OpenAI-compatible) — free tier |
+| Default model | `meta/llama-3.3-70b-instruct` (free) |
+| Memory | Postgres (relational) + Chroma (vector), distilled facts |
+| Backend | Python · FastAPI · LangGraph |
+| Frontend | Next.js · TypeScript · Tailwind · shadcn/ui |
+| Hosting | Vercel (web) · Railway/Render (agent) |
+
+No Claude or paid LLMs — the project runs entirely on free providers.
+
+## Setup (backend smoke test)
+
+```bash
+cd backend
+cp .env.example .env        # then paste your NVIDIA_API_KEY
+pip install -r requirements.txt
+python smoke_test.py        # should stream a SARTHI reply to "Hi, I'm Priya"
+```
+
+## Roadmap
+
+`F1` Conversational Agent Core (memory) → `F2` University Shortlister → `F3` ROI Predictor → `F4` SOP Co-Pilot → `F5` Loan Eligibility + Offer → `F6` Document Auto-Fill → `F7` Study Abroad Passport.
+
+One feature per release. Ship and use F1 before adding F2.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+---
+
+*Built by Team Rath (रथ — the chariot).*

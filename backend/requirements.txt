@@ -1,0 +1,7 @@
+# SARTHI backend — Phase 1 foundation deps.
+# Kept minimal so it installs cleanly (incl. on Python 3.14).
+# Agent stack (langgraph, langchain-openai, chromadb, psycopg) is added
+# in the LangGraph step once wheel compatibility is confirmed.
+
+openai>=1.40.0
+python-dotenv>=1.0.1
