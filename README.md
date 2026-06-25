@@ -17,8 +17,9 @@ Counsellors charge ₹50k–₹2L and push universities that pay them. Education
 🚧 **Early build — personal/portfolio project.** No external deadline.
 
 - ✅ **F1 — Conversational Agent Core** working end-to-end: LangGraph agent with SARTHI persona, streaming over SSE, per-thread conversation history, and **cross-session long-term memory** (distilled facts in Chroma, recalled in new sessions).
-- ✅ **Web chat UI** (`sarthi-web/`): Next.js + Tailwind + framer-motion. Anonymous signed-cookie identity, streaming replies, vernacular-first design (spinning chakra, journey path, Hinglish starters).
-- ⏭️ Next: F2 University Shortlister.
+- ✅ **Web chat UI** (`sarthi-web/`): Next.js + Tailwind + framer-motion. Anonymous signed-cookie identity, streaming replies, markdown rendering, vernacular-first design (spinning chakra, journey path, Hinglish starters).
+- ✅ **F2 — University Shortlister**: agent tool-calling over a curated dataset; returns a Reach/Target/Safe shortlist with approximate cost, rendered as a table in chat.
+- ⏭️ Next: F3 ROI Predictor.
 
 ## Stack
 

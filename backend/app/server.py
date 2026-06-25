@@ -102,7 +102,7 @@ async def chat(req: ChatRequest, request: Request):
                 # (messages mode also surfaces the complete AIMessage the node
                 # commits to state — skip that to avoid a duplicated reply.)
                 if (
-                    meta.get("langgraph_node") == "respond"
+                    meta.get("langgraph_node") == "agent"
                     and isinstance(chunk, AIMessageChunk)
                     and chunk.content
                 ):
