@@ -2,6 +2,8 @@
 
 import { AnimatePresence, motion, MotionConfig, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type Role = "user" | "sarthi";
 type Message = { id: number; role: Role; content: string };
@@ -245,14 +247,16 @@ export default function Home() {
                         className="flex gap-3"
                       >
                         <Chakra rolling={streamingId === m.id} size={28} />
-                        <div className="min-w-0 flex-1 whitespace-pre-wrap pt-0.5 leading-relaxed">
+                        <div className="min-w-0 flex-1 pt-0.5">
                           {m.content === "" && streamingId === m.id ? (
                             <Thinking />
                           ) : (
-                            <>
-                              {m.content}
+                            <div className="md">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {m.content}
+                              </ReactMarkdown>
                               {streamingId === m.id && <span className="caret">▍</span>}
-                            </>
+                            </div>
                           )}
                         </div>
                       </motion.li>
