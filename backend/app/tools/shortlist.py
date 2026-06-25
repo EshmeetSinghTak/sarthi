@@ -13,6 +13,8 @@ from pathlib import Path
 
 from langchain_core.tools import tool
 
+from ..config import USD_PER_INR  # shared FX constant (see CLAUDE.md D7)
+
 _DATA = json.loads(
     (Path(__file__).resolve().parent.parent.parent / "data" / "universities.json").read_text(
         encoding="utf-8"
@@ -20,8 +22,6 @@ _DATA = json.loads(
 )
 UNIVERSITIES = _DATA["universities"]
 DATA_NOTE = _DATA["data_note"]
-
-USD_PER_INR = 1 / 84  # MVP fixed rate (see CLAUDE.md D7)
 
 # Map free-text field requests onto the dataset taxonomy.
 _FIELD_SYNONYMS = {

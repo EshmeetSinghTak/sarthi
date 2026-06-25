@@ -78,3 +78,18 @@ class Settings:
 
 
 settings = Settings()
+
+# --- Domain constants (centralized; never hardcode these in logic) ---
+# USD per 1 INR. Env-overridable because the rate drifts; default ≈ ₹84/USD.
+USD_PER_INR: float = float(os.getenv("SARTHI_USD_PER_INR", 1 / 84))
+
+# ROI Predictor (F3) — all tunables live here, never inline in roi.py.
+ROI_DEFAULT_INTEREST_RATE: float = 10.5  # annual %, typical Indian education loan
+ROI_DEFAULT_TENURE_YEARS: int = 8        # loan repayment tenure
+ROI_DEFAULT_LOAN_FRACTION: float = 0.70  # fallback loan = 70% of total cost
+ROI_DEFAULT_YEARS: int = 2               # degree length in years
+ROI_LIST_LIMIT: int = 6                  # max universities in a base-case list
+ROI_SENSITIVITY_RATES: tuple[float, ...] = (9.0, 10.5, 12.0)   # grid columns (%)
+ROI_SENSITIVITY_TENURES: tuple[int, ...] = (5, 8, 10)          # grid rows (years)
+ROI_PRESTIGE_BASE: float = 0.9   # salary multiplier at competitiveness 1
+ROI_PRESTIGE_STEP: float = 0.05  # +per competitiveness point (→ 1.1 at comp 5)
