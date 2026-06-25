@@ -142,3 +142,57 @@ def roi(
         "count": len(rows),
         "results": rows,
     }
+
+
+def breakdown(
+    university: str,
+    field: str,
+    loan_inr_lakh: float | None = None,
+    years: int = config.ROI_DEFAULT_YEARS,
+) -> dict:
+    """One university's base-case ROI plus a rate x tenure EMI sensitivity grid."""
+    canon_field = _normalize_field(field) or field
+    target = university.strip().lower()
+    uni = next((u for u in UNIVERSITIES if u["name"].strip().lower() == target), None)
+    if uni is None:
+        uni = next((u for u in UNIVERSITIES if target in u["name"].lower()), None)
+    if uni is None:
+        return {"error": f"University '{university}' not found in dataset.", "note": SALARY_NOTE}
+
+    base = roi_for_university(
+        uni,
+        canon_field,
+        loan_inr_lakh,
+        config.ROI_DEFAULT_INTEREST_RATE,
+        config.ROI_DEFAULT_TENURE_YEARS,
+        years,
+    )
+    if base is None:
+        return {
+            "error": f"No salary data for {canon_field} in {uni['country']}.",
+            "note": SALARY_NOTE,
+        }
+
+    loan_inr = base["loan_inr_lakh"] * 100_000
+    grid = []
+    for tenure in config.ROI_SENSITIVITY_TENURES:
+        grid.append(
+            {
+                "tenure_years": tenure,
+                "emi_by_rate": {
+                    f"{rate}%": round(_emi(loan_inr, rate, tenure))
+                    for rate in config.ROI_SENSITIVITY_RATES
+                },
+            }
+        )
+
+    return {
+        "note": SALARY_NOTE,
+        "university": uni["name"],
+        "base_case": base,
+        "sensitivity_grid": {
+            "rates_pct": list(config.ROI_SENSITIVITY_RATES),
+            "tenures_years": list(config.ROI_SENSITIVITY_TENURES),
+            "monthly_emi_inr": grid,
+        },
+    }

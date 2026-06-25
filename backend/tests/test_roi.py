@@ -52,3 +52,30 @@ def test_roi_explicit_universities_filter():
     out = roi_mod.roi("Computer Science", universities=["Arizona State University"])
     assert out["count"] == 1
     assert out["results"][0]["name"] == "Arizona State University"
+
+
+def test_breakdown_full_grid_shape():
+    out = roi_mod.breakdown("Arizona State University", "Computer Science")
+    grid = out["sensitivity_grid"]["monthly_emi_inr"]
+    assert len(grid) == len(config.ROI_SENSITIVITY_TENURES)
+    for row in grid:
+        assert len(row["emi_by_rate"]) == len(config.ROI_SENSITIVITY_RATES)
+    assert "base_case" in out
+    assert out["university"] == "Arizona State University"
+
+
+def test_breakdown_emi_rises_with_rate_within_a_tenure():
+    out = roi_mod.breakdown("Arizona State University", "Computer Science")
+    first_row = out["sensitivity_grid"]["monthly_emi_inr"][0]
+    emis = list(first_row["emi_by_rate"].values())
+    assert emis == sorted(emis)
+
+
+def test_breakdown_substring_match():
+    out = roi_mod.breakdown("Arizona State", "Computer Science")
+    assert out["university"] == "Arizona State University"
+
+
+def test_breakdown_unknown_university_returns_error():
+    out = roi_mod.breakdown("Hogwarts", "Computer Science")
+    assert "error" in out
