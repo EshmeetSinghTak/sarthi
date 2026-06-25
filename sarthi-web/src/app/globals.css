@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+/* SARTHI design tokens — twilight indigo canvas, saffron as the one accent. */
+@theme {
+  --color-ink: #1a1733; /* canvas: the twilight before the journey */
+  --color-ink-2: #241f45; /* raised surfaces / student bubbles */
+  --color-ink-3: #2f2956; /* hairlines, borders */
+  --color-cream: #f5f0e6; /* warm primary text */
+  --color-muted: #9b95c4; /* lavender secondary text */
+  --color-saffron: #f4a02c; /* the charioteer's light — accent */
+  --color-saffron-deep: #e8842a;
+
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-inter);
+  --font-deva: var(--font-noto-deva);
+}
+
+html,
+body {
+  background: var(--color-ink);
+  color: var(--color-cream);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+/* The chariot wheel turns while SARTHI is composing. */
+@keyframes sarthi-roll {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.wheel-rolling {
+  animation: sarthi-roll 3.5s linear infinite;
+}
+
+/* Streaming caret that blinks at the end of SARTHI's reply. */
+@keyframes sarthi-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+.caret {
+  display: inline-block;
+  width: 0.5ch;
+  animation: sarthi-blink 1.1s steps(1) infinite;
+  color: var(--color-saffron);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wheel-rolling,
+  .caret {
+    animation: none;
+  }
+}
+
+/* Quiet, branded scrollbar. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-3) transparent;
+}

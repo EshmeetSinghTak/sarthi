@@ -6,6 +6,8 @@ from — a bug we hit early on with bare load_dotenv().
 """
 
 import os
+import secrets
+import warnings
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -37,9 +39,24 @@ class Settings:
     chroma_dir: str = str(BACKEND_DIR / "chroma_db")
     checkpoint_db: str = str(BACKEND_DIR / "sarthi_state.db")
 
+    # --- Auth (anonymous signed-cookie identity) ---
+    # Secret used to sign identity cookies. A random per-process default keeps
+    # dev safe-by-accident, but set SARTHI_SECRET_KEY so identities survive
+    # restarts (and are stable across instances).
+    secret_key: str = os.getenv("SARTHI_SECRET_KEY", "")
+    if not secret_key:
+        warnings.warn(
+            "SARTHI_SECRET_KEY not set — using a random per-process secret. "
+            "Identity cookies will not survive a restart. Set it in .env.",
+            stacklevel=2,
+        )
+        secret_key = secrets.token_urlsafe(48)
+    # Send cookies only over HTTPS. Off in local dev (http); on in production.
+    cookie_secure: bool = os.getenv("SARTHI_COOKIE_SECURE", "false").lower() == "true"
+
     # --- Dev flags ---
-    # Debug-only endpoints (e.g. inspecting a user's memory) are off unless
-    # explicitly enabled. NEVER enable in a deployment without auth.
+    # Debug-only endpoints (e.g. inspecting memory) are off unless explicitly
+    # enabled. NEVER enable in a deployment without auth.
     debug: bool = os.getenv("SARTHI_DEBUG", "false").lower() == "true"
 
     def require_key(self) -> None:

@@ -30,6 +30,9 @@ out/
 npm-debug.log*
 yarn-error.log*
 
+# ---- Test / browser artifacts ----
+.playwright-mcp/
+
 # ---- OS / editor ----
 .DS_Store
 Thumbs.db
