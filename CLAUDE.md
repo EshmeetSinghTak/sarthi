@@ -4,6 +4,41 @@
 
 ---
 
+## 0. Current Build Status & Corrections (updated 2026-06-25)
+
+> Reflects what is **actually built** and corrects the April plan below. Where this conflicts with later sections, **this wins** (per the §13b reversal protocol).
+
+- **Repo:** public — https://github.com/EshmeetSinghTak/sarthi (GitHub handle **EshmeetSinghTak**). MIT. Monorepo: `backend/` (Python) + `sarthi-web/` (Next.js).
+- **Hard constraint (user):** **NO Claude, NO paid LLMs** anywhere in the product. Free **NVIDIA Build** models only (OpenAI-compatible; one `base_url`/`api_key`).
+
+**Built & verified end-to-end:**
+- **F1 — agent core:** LangGraph graph `recall → agent ⇄ tools → remember`; per-thread history (`AsyncSqliteSaver`); cross-session long-term memory (Chroma distilled facts).
+- **Web UI** (`sarthi-web/`): Next.js 16 + Tailwind v4 + framer-motion + react-markdown. Twilight-indigo/saffron, spinning chakra, Hinglish. **Anonymous signed-cookie identity** (Option A, `backend/app/auth.py`) — `user_id` never trusted from the body.
+- **F2 — University Shortlister:** agent tool-calling over `backend/data/universities.json`; heuristic Reach/Target/Safe banding; rendered as a markdown table in chat.
+
+**Model/stack reality (supersedes §7 & §13b where they differ):**
+- Chat default: `deepseek-ai/deepseek-v4-flash` (reasoning model; `extra_body` `chat_template_kwargs.thinking`). Utility/distillation: `meta/llama-3.1-8b-instruct`. Verified fallback: `meta/llama-3.3-70b-instruct`.
+- `z-ai/glm-5.1` — listed but **times out** on the free tier; do not use. **DeepSeek-R1 → DeepSeek-V4** (R1 gone). Nemotron-70b old id 404s (newer: `nvidia/llama-3.3-nemotron-super-49b-v1.5`).
+- Embeddings: `nvidia/nv-embedqa-e5-v5` (1024-dim; needs `input_type` query/passage). **NV-Embed-v2 (D3c) is gone from the catalog — superseded.**
+- Tool-calling confirmed on deepseek-v4-flash, llama-3.3-70b, nemotron-super-49b.
+- **NVIDIA free tier 429-rate-limits** under heavy testing (deepseek hits it fastest). While testing, override per-run: `SARTHI_MODEL_DEFAULT=meta/llama-3.3-70b-instruct`.
+
+**Environment & run:**
+- **Python 3.14** + venv at `backend/.venv` (full stack incl. chromadb has 3.14 wheels — no 3.12 needed).
+- Backend: `cd backend && ./.venv/Scripts/python -m uvicorn app.server:app --port 8000`. Secrets in `backend/.env` (git-ignored; `SARTHI_SECRET_KEY`, `NVIDIA_API_KEY`). Debug `/memory` gated behind `SARTHI_DEBUG`.
+- Frontend: `cd sarthi-web && npm run dev` (:3000). `next.config` rewrites `/api/agent/*` → backend (same-origin keeps the identity cookie first-party).
+
+**Gotchas (each cost real time — heed them):**
+- Windows console is cp1252 → add `sys.stdout.reconfigure(encoding="utf-8")` to any script printing model output (Hindi/glyphs).
+- `load_dotenv()` searches the **script's** dir, not cwd → `config.py` loads `.env` by explicit path.
+- sse-starlette emits **CRLF** SSE frames → parse with `/\r?\n\r?\n/`, never `"\n\n"`.
+- `TaskStop` doesn't kill the dev server's child node → port 3000 lingers; free it via PowerShell `Get-NetTCPConnection -LocalPort 3000 ... Stop-Process`. After installing a frontend dep, delete `.next` (stale RSC manifest).
+- Commit `.gitignore` (incl. `.env`, `*.db`, `chroma_db/`) **before** the first `git add` so secrets never enter history.
+
+**Next up:** F3 — ROI Predictor (builds on F2's cost data).
+
+---
+
 ## 1. The Hackathon
 
 - **Event:** CRP TenzorX 2026 National AI Hackathon
@@ -12,7 +47,7 @@
 - **Format:** Round-based.
   - **Round 1 — PPT / Brief** · ✅ **SUBMITTED 2026-04-19**
   - **Round 1 results announced:** **2026-04-24** — ❌ **NOT SELECTED**
-- **Status (post-2026-04-24):** Hackathon over. **SARTHI is now a personal/portfolio project.** No external deadline. Build at user's own pace. Goal shift: portfolio piece, learning, possible real launch — not winning a panel.
+- **Status (post-2026-04-24):** Hackathon over. **SARTHI is now a personal/portfolio project.** No external deadline. Build at user's own pace. Goal shift: portfolio piece, learning, possible real launch — not winning a panel. **Build is underway — see §0 for current status.**
 - **Team name:** **Rath** (रथ — *the chariot*) · chosen 2026-04-19 to complement SARTHI's charioteer metaphor
 - **Team composition:** Solo human + Claude (effectively a 1-person team with AI collaborator)
 
@@ -334,16 +369,16 @@ No external deadline. Build at own pace. Goal: portfolio piece + learning + poss
 - **Public from Day 1** — GitHub repo, public Vercel deploy, dev log on Twitter/LinkedIn for portfolio value.
 - **Real users > pretend users** — recruit a few actual study-abroad aspirants from VNIT / college networks for feedback.
 
-**Open MVP build items (pick & sequence based on energy):**
-- [ ] Initialize Next.js + Tailwind + shadcn/ui project, push to GitHub (public)
-- [ ] Set up Claude Agent SDK basic chat loop with persistent memory
-- [ ] Source ~50 US universities seed dataset (admission rates, tuition, salary outcomes)
-- [ ] Build F1 Conversational Agent Core first — everything depends on it
-- [ ] F2 Shortlister + F3 ROI as second pass once agent works
-- [ ] Source public salary priors (levels.fyi scrape, H1B LCA data)
-- [ ] Decide: SOP Co-Pilot — Claude direct vs fine-tuned smaller model
-- [ ] Lock visual identity (color palette, Priya illustration style)
-- [ ] Confirm Bhashini API access (or ElevenLabs Hindi voice as fallback)
+**Open MVP build items (see §0 for current status):**
+- [x] Initialize Next.js + Tailwind project, push to GitHub (public) — built with Tailwind v4 directly (shadcn not used)
+- [x] Basic chat loop with persistent memory — via **LangGraph** (not Claude Agent SDK — see no-paid-LLM constraint in §0)
+- [x] Source universities seed dataset — `backend/data/universities.json` (~26 US + Canadian)
+- [x] Build F1 Conversational Agent Core — done
+- [x] F2 Shortlister — done · [ ] F3 ROI — next
+- [ ] Source public salary priors (levels.fyi scrape, H1B LCA data) — needed for F3
+- [ ] Decide: SOP Co-Pilot approach (F4) — free NVIDIA reasoning model (deepseek-v4), NOT Claude
+- [x] Lock visual identity — twilight indigo + saffron, chakra signature, Fraunces/Inter/Noto Devanagari
+- [ ] Confirm Bhashini API access (or ElevenLabs Hindi voice as fallback) — voice deferred
 - [ ] Recruit 3–5 real study-abroad aspirants for usability feedback
 
 ## 15. References
@@ -355,4 +390,6 @@ No external deadline. Build at own pace. Goal: portfolio piece + learning + poss
 
 ---
 
-*Last updated: 2026-04-19 — design reviewed and hardened with 5 MUST fixes (timeline generator · NBFC competitors · DPDP/RBI compliance · monetization streams · SOP Co-Pilot reframing) and SHOULD #10 (journey as phases, not days). Ready to generate PPT slide content.*
+*Last updated: 2026-06-25 — added §0 (current build status & corrections): repo live, F1 + web UI + F2 shipped, model/embedding reality corrected, env/run + gotchas captured. Earlier sections retain the original pitch/strategy context; §0 supersedes stale build specifics.*
+
+*(2026-04-19 — design reviewed and hardened with 5 MUST fixes: timeline generator · NBFC competitors · DPDP/RBI compliance · monetization streams · SOP Co-Pilot reframing; SHOULD #10 journey-as-phases.)*
