@@ -64,7 +64,7 @@ def roi_for_university(
     salary_usd *= _prestige_multiplier(uni["competitiveness"])
 
     living = LIVING_COST_USD.get(country, 0)
-    total_cost_inr_lakh = _usd_to_inr_lakh((uni["tuition_usd"] + living) * years)
+    total_cost_inr_lakh = round(_usd_to_inr_lakh((uni["tuition_usd"] + living) * years), 1)
     salary_inr_lakh = _usd_to_inr_lakh(salary_usd)
     salary_inr_per_year = salary_inr_lakh * 100_000
 
@@ -83,7 +83,7 @@ def roi_for_university(
         "country": country,
         "city": uni["city"],
         "qs_rank": uni["qs_rank"],
-        "total_cost_inr_lakh": round(total_cost_inr_lakh, 1),
+        "total_cost_inr_lakh": total_cost_inr_lakh,
         "expected_salary_inr_lakh_per_year": round(salary_inr_lakh, 1),
         "loan_inr_lakh": round(loan_lakh, 1),
         "monthly_emi_inr": round(emi),
