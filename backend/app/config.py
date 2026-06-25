@@ -37,6 +37,11 @@ class Settings:
     chroma_dir: str = str(BACKEND_DIR / "chroma_db")
     checkpoint_db: str = str(BACKEND_DIR / "sarthi_state.db")
 
+    # --- Dev flags ---
+    # Debug-only endpoints (e.g. inspecting a user's memory) are off unless
+    # explicitly enabled. NEVER enable in a deployment without auth.
+    debug: bool = os.getenv("SARTHI_DEBUG", "false").lower() == "true"
+
     def require_key(self) -> None:
         if not self.nvidia_api_key:
             raise RuntimeError(

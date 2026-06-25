@@ -56,7 +56,9 @@ curl -N -X POST http://127.0.0.1:8000/chat \
   -d '{"user_id":"priya","message":"Hi, I want an MS in Robotics abroad."}'
 ```
 
-`GET /memory/{user_id}` shows the long-term facts SARTHI has learned about a user.
+`GET /memory/{user_id}` shows the long-term facts SARTHI has learned about a user (debug-only; enable with `SARTHI_DEBUG=true`).
+
+> ⚠️ **Security:** the API currently has **no authentication** — `user_id` is client-supplied and unverified. Run **local-only**. Real auth (verified session → `user_id`) and CORS lockdown are tracked as the Phase 2 "user identity" item, required before any deployment.
 
 ## Roadmap
 
