@@ -223,8 +223,10 @@ def estimate_roi(
         tenure_years: Loan tenure in years. Omit for the default (8).
 
     Returns a JSON string: per-university total cost, expected salary, monthly EMI,
-    EMI-to-income %, and payback years. All figures approximate — present as
-    guidance and say they are worth verifying.
+    EMI-to-income %, and payback years (total loan repayment divided by one year's
+    gross salary — a rough effort ratio, not a tax- or living-cost-adjusted
+    break-even). All figures approximate — present as guidance and say they are
+    worth verifying.
     """
     return json.dumps(
         roi(

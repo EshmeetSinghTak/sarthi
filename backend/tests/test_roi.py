@@ -79,3 +79,12 @@ def test_breakdown_substring_match():
 def test_breakdown_unknown_university_returns_error():
     out = roi_mod.breakdown("Hogwarts", "Computer Science")
     assert "error" in out
+
+
+def test_breakdown_no_salary_for_field_returns_error():
+    # A real university but an unrecognised field has no salary prior, so the
+    # base case is None and breakdown surfaces an error (not a grid).
+    out = roi_mod.breakdown("Carnegie Mellon University", "Basket Weaving")
+    assert "error" in out
+    assert "note" in out
+    assert "sensitivity_grid" not in out
