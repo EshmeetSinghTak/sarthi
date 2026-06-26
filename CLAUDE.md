@@ -39,6 +39,8 @@
 
 - **F4 — SOP Co-Pilot:** done. Full workspace: deterministic `analyze_sop` (length vs 700–1000 band, cliché/red-flag chips from `backend/data/sop_cliches.json`, long-sentence + structure signals — no LLM, all tunables in `config.py`); append-only multi-SOP SQLite store (`backend/app/sop_store.py`, new `sarthi_sop.db`, every read/write user-scoped — IDOR-audited); cookie-scoped REST API (`/sops…` in `server.py`, reached via `/api/agent/sops`); two agent tools `review_sop`/`list_my_sops` (user_id via LangGraph `InjectedState`, never from the model — the model only passes a title); a never-write-it Socratic coaching prompt block. New Next.js route `sarthi-web/src/app/sop/` (editor + editorial analysis scorecard + version history/restore; framer-motion, a11y). Backend verified end-to-end on **deepseek** (calls `list_my_sops→review_sop`, coaches citing the analysis + exact clichés, refuses to rewrite). **Gotcha:** the **llama-3.3-70b test-override model stochastically refuses** tool-use (~1 in 4) at temp 0.7 — verify agent behavior on **deepseek**, not the llama override.
 
+- **Frontend overhaul:** done. Professional "modern AI product" redesign on the `frontend-overhaul` branch — marketing landing at `/` (hero, agent-vs-chatbot, Hero-7 feature grid, 4-phase journey, footer; honest copy, no fabricated logos/stats), shared `AppShell` (desktop sidebar + mobile top/bottom nav) via an `(app)` route group, **chat moved to `/chat`**, SOP to `/sop`. New shared `sarthi-web/src/components/` (`Chakra`, `icons`, `AppShell`, `landing/*`) + `src/lib/` (`motion`, `nav`, `content`) eliminate the prior copy-paste. Built spec→plan→inline execution (`docs/superpowers/`); tsc + `next build` clean, 48 backend tests still green (no backend touched). **Note:** old `/` bookmarks now hit the landing page, not chat. Visual/interaction QA still needs a human pass in the browser.
+
 **Next up:** F5 — Loan Eligibility + Personalized Offer (NBFC conversion funnel).
 
 ---
@@ -382,6 +384,7 @@ No external deadline. Build at own pace. Goal: portfolio piece + learning + poss
 - [x] Source public salary priors (levels.fyi / H1B LCA) — done: `backend/data/salary_priors.json` (field×country)
 - [ ] Decide: SOP Co-Pilot approach (F4) — free NVIDIA reasoning model (deepseek-v4), NOT Claude
 - [x] Lock visual identity — twilight indigo + saffron, chakra signature, Fraunces/Inter/Noto Devanagari
+- [x] Whole-frontend UI/UX overhaul — marketing landing page (`/`) + shared `AppShell` + re-skinned chat (`/chat`) & SOP (`/sop`), shared `components/`+`lib/` (frontend-overhaul branch)
 - [ ] Confirm Bhashini API access (or ElevenLabs Hindi voice as fallback) — voice deferred
 - [ ] Recruit 3–5 real study-abroad aspirants for usability feedback
 
