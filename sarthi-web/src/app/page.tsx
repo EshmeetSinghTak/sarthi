@@ -180,7 +180,7 @@ export default function Home() {
           </div>
           <Link
             href="/sop"
-            className="ml-auto rounded-full px-3 py-2 text-sm text-muted transition-colors hover:text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/60"
+            className="ml-auto inline-flex min-h-11 items-center rounded-full px-3 py-2 text-sm text-muted transition-colors hover:text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/60"
           >
             SOP Workspace →
           </Link>

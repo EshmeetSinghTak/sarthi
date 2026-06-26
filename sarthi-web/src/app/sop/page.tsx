@@ -176,7 +176,7 @@ function Scorecard({ a }: { a: Analysis }) {
         <div className="mt-5">
           <p className="text-xs text-muted">Phrases worth rewriting in your own words</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
-            <AnimatePresence initial={false}>
+            <AnimatePresence>
               {a.cliche_hits.map((c) => (
                 <motion.span
                   key={c.phrase}
@@ -313,7 +313,7 @@ export default function SopWorkspace() {
           </div>
           <Link
             href="/"
-            className="ml-auto rounded-full px-3 py-2 text-sm text-muted transition-colors hover:text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/60"
+            className="ml-auto inline-flex min-h-11 items-center rounded-full px-3 py-2 text-sm text-muted transition-colors hover:text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/60"
           >
             ← Chat
           </Link>
@@ -335,7 +335,7 @@ export default function SopWorkspace() {
                 <li key={s.id} className="shrink-0 lg:shrink">
                   <button
                     onClick={() => open(s.id)}
-                    aria-current={s.id === activeId}
+                    aria-current={s.id === activeId ? "location" : undefined}
                     className={`min-h-11 w-44 rounded-xl px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/60 lg:w-full ${
                       s.id === activeId
                         ? "bg-ink-2 text-cream"
