@@ -13,6 +13,40 @@
   --font-display: var(--font-fraunces);
   --font-body: var(--font-inter);
   --font-deva: var(--font-noto-deva);
+
+  --radius-card: 1rem;
+  --radius-pill: 9999px;
+
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+}
+
+/* Dawn gradient canvas — the light the charioteer drives toward. */
+.bg-dawn {
+  background:
+    radial-gradient(60% 50% at 50% 0%, rgb(244 160 44 / 0.10), transparent 70%),
+    radial-gradient(40% 40% at 80% 10%, rgb(232 132 42 / 0.08), transparent 70%),
+    var(--color-ink);
+}
+
+/* Soft saffron aura behind hero marks and empty states. */
+.aura-saffron {
+  position: relative;
+}
+.aura-saffron::before {
+  content: "";
+  position: absolute;
+  inset: -40% -20% auto -20%;
+  height: 18rem;
+  background: radial-gradient(50% 50% at 50% 50%, rgb(244 160 44 / 0.16), transparent 70%);
+  filter: blur(60px);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Consistent vertical rhythm for landing sections. */
+.section {
+  padding-block: clamp(3.5rem, 8vw, 7rem);
 }
 
 html,
