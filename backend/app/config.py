@@ -93,3 +93,9 @@ ROI_SENSITIVITY_RATES: tuple[float, ...] = (9.0, 10.5, 12.0)   # grid columns (%
 ROI_SENSITIVITY_TENURES: tuple[int, ...] = (5, 8, 10)          # grid rows (years)
 ROI_PRESTIGE_BASE: float = 0.9   # salary multiplier at competitiveness 1
 ROI_PRESTIGE_STEP: float = 0.05  # +per competitiveness point (→ 1.1 at comp 5)
+
+# --- F4 SOP Co-Pilot (tunables centralized; never hardcode in logic) ---
+SOP_DB_PATH: str = os.getenv("SARTHI_SOP_DB", str(BACKEND_DIR / "sarthi_sop.db"))
+SOP_TARGET_WORDS_MIN: int = 700   # typical SOP lower bound
+SOP_TARGET_WORDS_MAX: int = 1000  # typical SOP upper bound
+SOP_LONG_SENTENCE_WORDS: int = 40  # sentences longer than this are flagged
