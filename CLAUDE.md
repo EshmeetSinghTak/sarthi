@@ -37,7 +37,9 @@
 
 - **F3 — ROI Predictor:** done. Two agent tools over a new `backend/data/salary_priors.json` (field×country starting salaries from H1B LCA / levels.fyi + living costs): `estimate_roi` (per-university cost vs salary vs EMI vs payback, base case) and `roi_breakdown` (rate×tenure EMI sensitivity grid for one uni). Deterministic pure-Python math; all tunables centralized in `config.py` (FX, loan defaults, sensitivity grid, prestige coefficients) — **no hardcoded values** (standing user rule). First pytest suite in the repo (`backend/tests/`, 22 tests). Verified end-to-end against `meta/llama-3.3-70b`. Built via spec→plan→subagent-driven execution (`docs/superpowers/`).
 
-**Next up:** F4 — SOP Co-Pilot (Socratic, student-authored; free NVIDIA reasoning model, NOT Claude).
+- **F4 — SOP Co-Pilot:** done. Full workspace: deterministic `analyze_sop` (length vs 700–1000 band, cliché/red-flag chips from `backend/data/sop_cliches.json`, long-sentence + structure signals — no LLM, all tunables in `config.py`); append-only multi-SOP SQLite store (`backend/app/sop_store.py`, new `sarthi_sop.db`, every read/write user-scoped — IDOR-audited); cookie-scoped REST API (`/sops…` in `server.py`, reached via `/api/agent/sops`); two agent tools `review_sop`/`list_my_sops` (user_id via LangGraph `InjectedState`, never from the model — the model only passes a title); a never-write-it Socratic coaching prompt block. New Next.js route `sarthi-web/src/app/sop/` (editor + editorial analysis scorecard + version history/restore; framer-motion, a11y). Backend verified end-to-end on **deepseek** (calls `list_my_sops→review_sop`, coaches citing the analysis + exact clichés, refuses to rewrite). **Gotcha:** the **llama-3.3-70b test-override model stochastically refuses** tool-use (~1 in 4) at temp 0.7 — verify agent behavior on **deepseek**, not the llama override.
+
+**Next up:** F5 — Loan Eligibility + Personalized Offer (NBFC conversion funnel).
 
 ---
 
@@ -376,7 +378,7 @@ No external deadline. Build at own pace. Goal: portfolio piece + learning + poss
 - [x] Basic chat loop with persistent memory — via **LangGraph** (not Claude Agent SDK — see no-paid-LLM constraint in §0)
 - [x] Source universities seed dataset — `backend/data/universities.json` (~26 US + Canadian)
 - [x] Build F1 Conversational Agent Core — done
-- [x] F2 Shortlister — done · [x] F3 ROI — done · [ ] F4 SOP — next
+- [x] F2 Shortlister — done · [x] F3 ROI — done · [x] F4 SOP — done · [ ] F5 Loan — next
 - [x] Source public salary priors (levels.fyi / H1B LCA) — done: `backend/data/salary_priors.json` (field×country)
 - [ ] Decide: SOP Co-Pilot approach (F4) — free NVIDIA reasoning model (deepseek-v4), NOT Claude
 - [x] Lock visual identity — twilight indigo + saffron, chakra signature, Fraunces/Inter/Noto Devanagari
