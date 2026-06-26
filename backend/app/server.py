@@ -21,14 +21,16 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from langchain_core.messages import AIMessageChunk, HumanMessage
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
-from . import auth, memory
+from . import auth, memory, sop_store
 from .agent import build_graph
 from .config import settings
+from .tools.sop import analyze_sop
 
 log = logging.getLogger("sarthi")
 _graph = None  # compiled LangGraph app, set in lifespan
@@ -38,6 +40,7 @@ _graph = None  # compiled LangGraph app, set in lifespan
 async def lifespan(app: FastAPI):
     global _graph
     settings.require_key()
+    sop_store.init_db()
     async with AsyncSqliteSaver.from_conn_string(settings.checkpoint_db) as saver:
         _graph = build_graph(saver)
         yield
@@ -127,3 +130,74 @@ async def get_memory(request: Request) -> dict:
         raise HTTPException(status_code=404, detail="Not found")
     user_id, _ = auth.resolve_user(request)
     return {"user_id": user_id, "facts": memory.all_facts(user_id)}
+
+
+# ---------------------------------------------------------------------------
+# F4 — SOP Co-Pilot endpoints
+# ---------------------------------------------------------------------------
+
+
+class CreateSopRequest(BaseModel):
+    title: str
+
+
+class SaveVersionRequest(BaseModel):
+    content: str
+
+
+def _with_cookie(payload: dict, user_id: str, is_new: bool, status_code: int = 200) -> JSONResponse:
+    resp = JSONResponse(payload, status_code=status_code)
+    if is_new:
+        auth.set_cookie(resp, user_id)
+    return resp
+
+
+@app.get("/sops")
+def sop_list(request: Request):
+    user_id, is_new = auth.resolve_user(request)
+    return _with_cookie({"sops": sop_store.list_sops(user_id)}, user_id, is_new)
+
+
+@app.post("/sops")
+def sop_create(req: CreateSopRequest, request: Request):
+    user_id, is_new = auth.resolve_user(request)
+    title = req.title.strip() or "Untitled SOP"
+    sop = sop_store.create_sop(user_id, title)
+    return _with_cookie(sop, user_id, is_new, status_code=201)
+
+
+@app.get("/sops/{sop_id}")
+def sop_get(sop_id: int, request: Request):
+    user_id, is_new = auth.resolve_user(request)
+    sop = sop_store.get_sop(user_id, sop_id)
+    if sop is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    latest = sop_store.get_latest_version(user_id, sop_id)
+    return _with_cookie({"sop": sop, "latest": latest}, user_id, is_new)
+
+
+@app.post("/sops/{sop_id}/versions")
+def sop_add_version(sop_id: int, req: SaveVersionRequest, request: Request):
+    user_id, is_new = auth.resolve_user(request)
+    analysis = analyze_sop(req.content)
+    version = sop_store.add_version(user_id, sop_id, req.content, analysis)
+    if version is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    return _with_cookie({"version": version, "analysis": analysis}, user_id, is_new, status_code=201)
+
+
+@app.get("/sops/{sop_id}/versions")
+def sop_list_versions(sop_id: int, request: Request):
+    user_id, is_new = auth.resolve_user(request)
+    if sop_store.get_sop(user_id, sop_id) is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    return _with_cookie({"versions": sop_store.list_versions(user_id, sop_id)}, user_id, is_new)
+
+
+@app.get("/sops/{sop_id}/versions/{version_id}")
+def sop_get_version(sop_id: int, version_id: int, request: Request):
+    user_id, is_new = auth.resolve_user(request)
+    version = sop_store.get_version(user_id, sop_id, version_id)
+    if version is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    return _with_cookie({"version": version}, user_id, is_new)
