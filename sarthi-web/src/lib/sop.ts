@@ -21,6 +21,7 @@ export type Analysis = {
   target_words: [number, number];
   cliche_hits: { phrase: string; count: number }[];
   long_sentences: { text_preview: string; word_count: number }[];
+  long_sentence_threshold: number;
   structure_signals: { mentions_program: boolean; mentions_goal: boolean; gives_reasons: boolean };
   note: string;
 };
@@ -42,7 +43,7 @@ export const createSop = (title: string) =>
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: JSON.stringify({ title }),
-  }).then(j<SopMeta>);
+  }).then(j<{ id: number; title: string; created_at: string }>);
 
 export const getSop = (id: number) =>
   fetch(`${BASE}/sops/${id}`, { credentials: "include" }).then(

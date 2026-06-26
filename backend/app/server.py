@@ -163,7 +163,9 @@ def sop_create(req: CreateSopRequest, request: Request):
     user_id, is_new = auth.resolve_user(request)
     title = req.title.strip() or "Untitled SOP"
     sop = sop_store.create_sop(user_id, title)
-    return _with_cookie(sop, user_id, is_new, status_code=201)
+    # Project out user_id — it must not leave the server (defense-in-depth).
+    payload = {"id": sop["id"], "title": sop["title"], "created_at": sop["created_at"]}
+    return _with_cookie(payload, user_id, is_new, status_code=201)
 
 
 @app.get("/sops/{sop_id}")

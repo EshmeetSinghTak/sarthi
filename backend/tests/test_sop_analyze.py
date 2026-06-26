@@ -49,6 +49,7 @@ def test_target_words_and_note_present():
     out = analyze_sop("word " * 800)
     assert out["target_words"] == [config.SOP_TARGET_WORDS_MIN, config.SOP_TARGET_WORDS_MAX]
     assert isinstance(out["note"], str) and out["note"]
+    assert out["long_sentence_threshold"] == config.SOP_LONG_SENTENCE_WORDS
 
 
 def test_structure_signals():

@@ -16,6 +16,7 @@ def client(tmp_path, monkeypatch):
 def test_create_and_get_sop(client):
     r = client.post("/sops", json={"title": "CMU"})
     assert r.status_code == 201
+    assert "user_id" not in r.json()
     sid = r.json()["id"]
     g = client.get(f"/sops/{sid}")
     assert g.status_code == 200
@@ -45,3 +46,5 @@ def test_cross_user_access_is_404(client):
     with TestClient(app) as other:  # fresh cookie jar = different anonymous user
         assert other.get(f"/sops/{sid}").status_code == 404
         assert other.post(f"/sops/{sid}/versions", json={"content": "x"}).status_code == 404
+        assert other.get(f"/sops/{sid}/versions").status_code == 404
+        assert other.get(f"/sops/{sid}/versions/1").status_code == 404

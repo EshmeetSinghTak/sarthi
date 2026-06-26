@@ -78,6 +78,7 @@ def analyze_sop(text: str) -> dict:
         "target_words": [config.SOP_TARGET_WORDS_MIN, config.SOP_TARGET_WORDS_MAX],
         "cliche_hits": cliche_hits,
         "long_sentences": long_sentences,
+        "long_sentence_threshold": config.SOP_LONG_SENTENCE_WORDS,
         "structure_signals": structure_signals,
         "note": CLICHE_NOTE + " These are signals to prompt reflection, not a grade.",
     }

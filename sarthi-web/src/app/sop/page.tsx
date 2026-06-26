@@ -200,7 +200,7 @@ function Scorecard({ a }: { a: Analysis }) {
       {a.long_sentences.length > 0 && (
         <div className="mt-5">
           <p className="text-xs text-muted tabular-nums">
-            {a.long_sentences.length} long sentence{a.long_sentences.length > 1 ? "s" : ""} <span>(&gt;40w)</span>
+            {a.long_sentences.length} long sentence{a.long_sentences.length > 1 ? "s" : ""} <span>(&gt;{a.long_sentence_threshold}w)</span>
           </p>
           <ul className="mt-2 space-y-1.5">
             {a.long_sentences.map((s, i) => (
