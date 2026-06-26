@@ -14,26 +14,34 @@ Counsellors charge ₹50k–₹2L and push universities that pay them. Education
 
 ## Status
 
-🚧 **Early build — personal/portfolio project.** No external deadline.
+🚧 **Active build — personal/portfolio project.** No external deadline.
 
-- ✅ **F1 — Conversational Agent Core** working end-to-end: LangGraph agent with SARTHI persona, streaming over SSE, per-thread conversation history, and **cross-session long-term memory** (distilled facts in Chroma, recalled in new sessions).
-- ✅ **Web chat UI** (`sarthi-web/`): Next.js + Tailwind + framer-motion. Anonymous signed-cookie identity, streaming replies, markdown rendering, vernacular-first design (spinning chakra, journey path, Hinglish starters).
+- ✅ **F1 — Conversational Agent Core** working end-to-end: LangGraph agent with SARTHI persona, streaming over SSE, per-thread conversation history (SQLite checkpointer), and **cross-session long-term memory** (distilled facts in Chroma, recalled in new sessions).
 - ✅ **F2 — University Shortlister**: agent tool-calling over a curated dataset; returns a Reach/Target/Safe shortlist with approximate cost, rendered as a table in chat.
-- ⏭️ Next: F3 ROI Predictor.
+- ✅ **F3 — ROI Predictor**: deterministic per-university cost vs salary vs EMI and payback math, plus a rate×tenure EMI sensitivity grid, exposed as two agent tools over a salary-priors dataset.
+- ✅ **F4 — SOP Co-Pilot**: a dedicated workspace with deterministic SOP analysis (length, cliché/red-flag detection, structure signals), an append-only per-user multi-SOP version store, and a Socratic coaching agent that gives feedback without ghost-writing.
+- ✅ **Web app** (`sarthi-web/`): Next.js + Tailwind. Marketing landing page, a shared app shell (sidebar + mobile nav), a streaming chat workspace, and the SOP workspace. Anonymous signed-cookie identity, markdown rendering, framer-motion, vernacular-first design (spinning chakra, Hinglish starters).
+- ⏭️ Next: F5 — Loan Eligibility + Personalized Offer.
 
 ## Stack
 
 | Layer | Choice |
 |-------|--------|
-| Agent framework | LangGraph (Python) |
-| LLMs | LLM-agnostic via NVIDIA Build (OpenAI-compatible) — free tier |
-| Default model | `meta/llama-3.3-70b-instruct` (free) |
-| Memory | Postgres (relational) + Chroma (vector), distilled facts |
-| Backend | Python · FastAPI · LangGraph |
-| Frontend | Next.js · TypeScript · Tailwind · shadcn/ui |
-| Hosting | Vercel (web) · Railway/Render (agent) |
+| Language / runtime | Python 3.14 (backend) · TypeScript / Node (web) |
+| Agent framework | LangGraph (`recall → agent ⇄ tools → remember` graph) |
+| LLM access | LLM-agnostic via **NVIDIA Build** (OpenAI-compatible, free tier) — one `base_url` / `api_key`, swappable per route |
+| Default chat model | `deepseek-ai/deepseek-v4-flash` (reasoning) · verified fallback `meta/llama-3.3-70b-instruct` |
+| Utility model | `meta/llama-3.1-8b-instruct` (fact distillation, light turns) |
+| Embeddings | `nvidia/nv-embedqa-e5-v5` (1024-dim) |
+| Conversation memory | SQLite checkpointer (`langgraph-checkpoint-sqlite` / `aiosqlite`) — per-thread history |
+| Long-term memory | Chroma vector store — distilled per-user facts recalled across sessions |
+| Backend API | FastAPI · Uvicorn · `sse-starlette` (Server-Sent Events streaming) |
+| SOP store | Append-only SQLite, user-scoped versions |
+| Frontend | Next.js 16 · React 19 · Tailwind CSS v4 · framer-motion · react-markdown + remark-gfm |
+| Auth | Anonymous signed-cookie identity (server-issued `user_id`, never trusted from the request body) |
+| Tests | `pytest` (deterministic ROI / SOP / config suites) |
 
-No Claude or paid LLMs — the project runs entirely on free providers.
+**No Claude, no paid LLMs anywhere** — the project runs end-to-end on free NVIDIA Build models. Models are reached through a single OpenAI-compatible client, so any route can be re-pointed by changing one line.
 
 ## Setup (backend)
 
