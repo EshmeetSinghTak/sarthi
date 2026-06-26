@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, MotionConfig, useReducedMotion } from "framer-motion";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -177,7 +178,12 @@ export default function Home() {
             <span className="font-display text-xl font-semibold tracking-tight">SARTHI</span>
             <span className="font-deva text-lg text-saffron">सारथी</span>
           </div>
-          <span className="ml-auto hidden text-xs text-muted sm:block">from dream to degree</span>
+          <Link
+            href="/sop"
+            className="ml-auto rounded-full px-3 py-2 text-sm text-muted transition-colors hover:text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/60"
+          >
+            SOP Workspace →
+          </Link>
         </header>
 
         {/* Conversation */}
