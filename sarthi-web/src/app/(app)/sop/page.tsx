@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Chakra } from "../../../components/Chakra";
 import { IconCheck, IconChevronDown, IconDash, IconPlus, IconRestore } from "../../../components/icons";
@@ -150,6 +150,122 @@ function Scorecard({ a }: { a: Analysis }) {
   );
 }
 
+/* ── New-SOP naming dialog ────────────────────────────────────────────── */
+function NewSopDialog({
+  open,
+  value,
+  busy,
+  error,
+  onChange,
+  onSubmit,
+  onClose,
+}: {
+  open: boolean;
+  value: string;
+  busy: boolean;
+  error: string | null;
+  onChange: (v: string) => void;
+  onSubmit: () => void;
+  onClose: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Focus the field when the dialog appears.
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
+
+  // Esc closes from anywhere while the dialog is open.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  const canSubmit = value.trim().length > 0 && !busy;
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-50 grid place-items-center p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+        >
+          {/* Backdrop */}
+          <button
+            aria-hidden
+            tabIndex={-1}
+            onClick={onClose}
+            className="absolute inset-0 cursor-default bg-ink/70 backdrop-blur-sm"
+          />
+
+          {/* Panel */}
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="new-sop-title"
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+            transition={{ type: "spring", stiffness: 320, damping: 28 }}
+            className="relative w-full max-w-md rounded-2xl border border-ink-3 bg-ink-2 p-6 shadow-2xl"
+          >
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (canSubmit) onSubmit();
+              }}
+            >
+              <h2 id="new-sop-title" className="font-display text-xl font-semibold">
+                New SOP
+              </h2>
+              <p className="mt-1.5 text-sm text-muted">
+                Give it a name so you can find it later.
+              </p>
+              <input
+                ref={inputRef}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="e.g. CMU Robotics"
+                maxLength={80}
+                className="mt-4 w-full rounded-xl border border-ink-3 bg-ink px-3.5 py-2.5 text-cream outline-none transition-colors placeholder:text-muted focus:border-saffron/60 focus-visible:ring-2 focus-visible:ring-saffron/40"
+              />
+              {error && (
+                <p role="alert" className="mt-3 text-sm text-saffron-deep">
+                  {error}
+                </p>
+              )}
+              <div className="mt-6 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm text-muted transition-colors hover:text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/60"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!canSubmit}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full bg-saffron px-5 py-2 text-sm font-medium text-ink transition-colors hover:bg-saffron-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/70 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {busy ? <Chakra rolling size={16} /> : <IconPlus className="size-4" />}
+                  {busy ? "Creating…" : "Create"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export default function SopWorkspace() {
   const [sops, setSops] = useState<SopMeta[]>([]);
   const [activeId, setActiveId] = useState<number | null>(null);
@@ -159,6 +275,9 @@ export default function SopWorkspace() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [creating, setCreating] = useState(false);
 
   const refreshSops = useCallback(async () => {
     try {
@@ -188,15 +307,25 @@ export default function SopWorkspace() {
     }
   }, []);
 
-  async function onNew() {
-    const title = window.prompt("Name this SOP (e.g. 'CMU Robotics'):")?.trim();
-    if (!title) return;
+  function onNew() {
+    setNewTitle("");
+    setError(null);
+    setNewOpen(true);
+  }
+
+  async function onCreate() {
+    const title = newTitle.trim();
+    if (!title || creating) return;
+    setCreating(true);
     try {
       const sop = await createSop(title);
+      setNewOpen(false);
       await refreshSops();
       await open(sop.id);
     } catch {
       setError("Couldn't create the SOP. Is the agent running?");
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -233,6 +362,15 @@ export default function SopWorkspace() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      <NewSopDialog
+        open={newOpen}
+        value={newTitle}
+        busy={creating}
+        error={error}
+        onChange={setNewTitle}
+        onSubmit={onCreate}
+        onClose={() => !creating && setNewOpen(false)}
+      />
       {/* Three zones on desktop, stacked on mobile */}
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* Left rail — SOP switcher */}
