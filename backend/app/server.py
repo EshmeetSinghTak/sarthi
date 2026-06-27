@@ -89,6 +89,37 @@ async def session(request: Request):
     return resp
 
 
+async def _stream_chat(graph, state, config):
+    """Yield SSE events: meta (tier) + token (reply text) + done/error.
+
+    Consumes both stream modes: "custom" carries the router's chosen tier
+    (emitted by agent_node up-front), "messages" carries token chunks. Only the
+    agent node's non-empty .content is forwarded — reasoning_content and the
+    final committed AIMessage never reach the client.
+    """
+    try:
+        async for mode, payload in graph.astream(
+            state, config=config, stream_mode=["messages", "custom"]
+        ):
+            if mode == "custom":
+                tier = payload.get("tier") if isinstance(payload, dict) else None
+                if tier:
+                    yield {"event": "meta", "data": tier}
+            elif mode == "messages":
+                chunk, meta = payload
+                if (
+                    meta.get("langgraph_node") == "agent"
+                    and isinstance(chunk, AIMessageChunk)
+                    and chunk.content
+                ):
+                    yield {"event": "token", "data": chunk.content}
+        yield {"event": "done", "data": ""}
+    except Exception:
+        # Log details server-side; don't leak internals to the client.
+        log.exception("chat stream failed")
+        yield {"event": "error", "data": "internal error"}
+
+
 @app.post("/chat")
 async def chat(req: ChatRequest, request: Request):
     user_id, is_new = auth.resolve_user(request)
@@ -96,27 +127,7 @@ async def chat(req: ChatRequest, request: Request):
     config = {"configurable": {"thread_id": thread_id}}
     state = {"messages": [HumanMessage(content=req.message)], "user_id": user_id}
 
-    async def event_stream():
-        try:
-            async for chunk, meta in _graph.astream(
-                state, config=config, stream_mode="messages"
-            ):
-                # Forward only streaming token chunks from the response node.
-                # (messages mode also surfaces the complete AIMessage the node
-                # commits to state — skip that to avoid a duplicated reply.)
-                if (
-                    meta.get("langgraph_node") == "agent"
-                    and isinstance(chunk, AIMessageChunk)
-                    and chunk.content
-                ):
-                    yield {"event": "token", "data": chunk.content}
-            yield {"event": "done", "data": ""}
-        except Exception:
-            # Log details server-side; don't leak internals to the client.
-            log.exception("chat stream failed for thread %s", thread_id)
-            yield {"event": "error", "data": "internal error"}
-
-    resp = EventSourceResponse(event_stream())
+    resp = EventSourceResponse(_stream_chat(_graph, state, config))
     if is_new:
         auth.set_cookie(resp, user_id)
     return resp
