@@ -20,3 +20,20 @@ def test_roi_constants_present():
 def test_shortlist_uses_shared_fx():
     from app.tools import shortlist
     assert shortlist.USD_PER_INR == config.USD_PER_INR
+
+
+def test_tier_models_present():
+    assert config.settings.model_light == "meta/llama-3.1-8b-instruct"
+    assert config.settings.model_mid  # defaults to the standard chat model
+    assert config.settings.model_reasoning == "nvidia/llama-3.3-nemotron-super-49b-v1.5"
+    assert config.settings.reasoning_max_tokens >= 2048
+
+
+def test_router_tunables_present():
+    assert config.ROUTER_TRIVIAL_MAX_WORDS > 0
+    assert isinstance(config.ROUTER_TRIVIAL_PATTERNS, tuple) and config.ROUTER_TRIVIAL_PATTERNS
+    assert config.ROUTER_COMPLEX_MIN_WORDS > config.ROUTER_TRIVIAL_MAX_WORDS
+    assert "vs" in config.ROUTER_COMPLEX_KEYWORDS
+    assert "review_sop" in config.ROUTER_DEEP_TOOLS
+    assert config.ROUTER_WEAK_REPLY_MIN_CHARS > 0
+    assert any("can't" in p or "cannot" in p for p in config.ROUTER_REFUSAL_PATTERNS)

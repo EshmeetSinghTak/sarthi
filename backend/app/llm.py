@@ -14,15 +14,28 @@ from openai import OpenAI
 from .config import settings
 from .prompts import DISTILL_PROMPT
 
-# Chat model — DeepSeek reasoning content stays in additional_kwargs; only
-# .content (the answer) streams to the user.
-chat_llm = ChatOpenAI(
-    model=settings.chat_model,
-    base_url=settings.nvidia_base_url,
-    api_key=settings.nvidia_api_key,
-    temperature=0.7,
-    top_p=0.95,
-    max_tokens=2048,
+def _make_chat(model: str, max_tokens: int, *, extra_body: dict | None = None) -> ChatOpenAI:
+    """Build a ChatOpenAI for one tier. Tools are bound later in agent.py."""
+    return ChatOpenAI(
+        model=model,
+        base_url=settings.nvidia_base_url,
+        api_key=settings.nvidia_api_key,
+        temperature=0.7,
+        top_p=0.95,
+        max_tokens=max_tokens,
+        extra_body=extra_body,
+    )
+
+
+# Three tiers selected per-turn by the router. None has tools bound here;
+# agent.py binds tools to the mid/reasoning tiers (the light 8B can't call
+# tools reliably and only handles trivial chit-chat). Reasoning content stays
+# in additional_kwargs; only .content (the answer) streams to the user.
+llm_light = _make_chat(settings.model_light, max_tokens=1024)
+llm_mid = _make_chat(settings.model_mid, max_tokens=2048, extra_body=settings.chat_extra_body)
+llm_reasoning = _make_chat(
+    settings.model_reasoning,
+    max_tokens=settings.reasoning_max_tokens,
     extra_body=settings.chat_extra_body,
 )
 

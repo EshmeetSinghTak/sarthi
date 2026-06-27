@@ -9,7 +9,19 @@ import { Chakra } from "../../../components/Chakra";
 import { container, item } from "../../../lib/motion";
 
 type Role = "user" | "sarthi";
-type Message = { id: number; role: Role; content: string };
+type TierLabel = "fast" | "standard" | "deep";
+type Message = { id: number; role: Role; content: string; tier?: TierLabel };
+
+// Abort the stream if SARTHI sends nothing for this long (model hang / rate-limit).
+const STALL_TIMEOUT_MS = 45_000;
+// Deep-reasoning turns stay silent while thinking (~27s) — give them more room.
+const STALL_TIMEOUT_DEEP_MS = 90_000;
+
+const TIER_LABEL: Record<TierLabel, string> = {
+  fast: "Fast",
+  standard: "Standard",
+  deep: "Deep thinking",
+};
 
 const STARTERS = [
   "Robotics mein MS karna hai — kahan apply karun?",
@@ -29,6 +41,25 @@ function Thinking() {
           transition={{ repeat: Infinity, duration: 1.1, delay: i * 0.18, ease: "easeInOut" }}
         />
       ))}
+    </span>
+  );
+}
+
+/** Shown while the slow reasoning tier is composing (stays silent ~27s). */
+function DeepThinking() {
+  return (
+    <span className="flex items-center gap-2 pt-2 text-sm text-muted" aria-label="SARTHI is thinking deeply">
+      SARTHI is thinking deeply
+      <span className="flex items-center gap-1">
+        {[0, 1, 2].map((i) => (
+          <motion.span
+            key={i}
+            className="size-1.5 rounded-full bg-saffron/70"
+            animate={{ opacity: [0.25, 1, 0.25] }}
+            transition={{ repeat: Infinity, duration: 1.1, delay: i * 0.18, ease: "easeInOut" }}
+          />
+        ))}
+      </span>
     </span>
   );
 }
@@ -72,12 +103,33 @@ export default function ChatPage() {
         m.map((msg) => (msg.id === sarthiMsg.id ? { ...msg, content: msg.content + token } : msg)),
       );
 
+    // Watchdog: if no token arrives within STALL_TIMEOUT_MS, abort and surface
+    // an error instead of spinning forever. Reset on every token received.
+    const controller = new AbortController();
+    let timedOut = false;
+    let stallWindow = STALL_TIMEOUT_MS;
+    let stall: ReturnType<typeof setTimeout> | undefined;
+    const resetStall = () => {
+      if (stall) clearTimeout(stall);
+      stall = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, stallWindow);
+    };
+
+    const setTier = (tier: TierLabel) =>
+      setMessages((m) =>
+        m.map((msg) => (msg.id === sarthiMsg.id ? { ...msg, tier } : msg)),
+      );
+
     try {
+      resetStall();
       const res = await fetch("/api/agent/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text }),
         credentials: "include",
+        signal: controller.signal,
       });
       if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
 
@@ -87,6 +139,7 @@ export default function ChatPage() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+        resetStall();
         buffer += decoder.decode(value, { stream: true });
         // Frames separated by a blank line; tolerate CRLF (sse-starlette uses \r\n).
         const frames = buffer.split(/\r?\n\r?\n/);
@@ -105,12 +158,24 @@ export default function ChatPage() {
           }
           const data = dataLines.join("\n");
           if (event === "token") append(data);
-          else if (event === "error") setError("Something went wrong. Try again.");
+          else if (event === "meta") {
+            const tier = data as TierLabel;
+            setTier(tier);
+            if (tier === "deep") {
+              stallWindow = STALL_TIMEOUT_DEEP_MS;
+              resetStall();
+            }
+          } else if (event === "error") setError("Something went wrong. Try again.");
         }
       }
     } catch {
-      setError("Couldn't reach SARTHI. Is the agent running?");
+      setError(
+        timedOut
+          ? "SARTHI is taking too long to respond — the free model may be busy. Please try again."
+          : "Couldn't reach SARTHI. Is the agent running?",
+      );
     } finally {
+      if (stall) clearTimeout(stall);
       setStreamingId(null);
     }
   }
@@ -193,11 +258,17 @@ export default function ChatPage() {
                       <Chakra rolling={streamingId === m.id} size={28} />
                       <div className="min-w-0 flex-1 pt-0.5">
                         {m.content === "" && streamingId === m.id ? (
-                          <Thinking />
+                          m.tier === "deep" ? <DeepThinking /> : <Thinking />
                         ) : (
                           <div className="md">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
                             {streamingId === m.id && <span className="caret">▍</span>}
+                          </div>
+                        )}
+                        {m.tier && streamingId !== m.id && m.content !== "" && (
+                          <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted">
+                            <span className="size-1.5 rounded-full bg-saffron/60" />
+                            {TIER_LABEL[m.tier]}
                           </div>
                         )}
                       </div>

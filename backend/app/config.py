@@ -24,8 +24,18 @@ class Settings:
     )
 
     # --- Models ---
-    # Chat reasoning model (user-facing turns).
-    chat_model: str = os.getenv("SARTHI_MODEL_DEFAULT", "deepseek-ai/deepseek-v4-flash")
+    # Tiered chat models for automatic routing (see router.py / agent.py).
+    model_light: str = os.getenv("SARTHI_MODEL_LIGHT", "meta/llama-3.1-8b-instruct")
+    model_mid: str = os.getenv(
+        "SARTHI_MODEL_MID", os.getenv("SARTHI_MODEL_DEFAULT", "meta/llama-3.3-70b-instruct")
+    )
+    model_reasoning: str = os.getenv(
+        "SARTHI_MODEL_REASONING", "nvidia/llama-3.3-nemotron-super-49b-v1.5"
+    )
+    # Reasoning models spend tokens "thinking"; give the answer room to land.
+    reasoning_max_tokens: int = int(os.getenv("SARTHI_REASONING_MAX_TOKENS", "3072"))
+    # The user-facing default tier; shown by /health.
+    chat_model: str = model_mid
     # Fast/cheap model for utility tasks like fact distillation.
     utility_model: str = os.getenv("SARTHI_MODEL_UTILITY", "meta/llama-3.1-8b-instruct")
     # Embedding model for long-term memory (1024-dim, QA-retrieval tuned).
@@ -99,3 +109,31 @@ SOP_DB_PATH: str = os.getenv("SARTHI_SOP_DB", str(BACKEND_DIR / "sarthi_sop.db")
 SOP_TARGET_WORDS_MIN: int = 700   # typical SOP lower bound
 SOP_TARGET_WORDS_MAX: int = 1000  # typical SOP upper bound
 SOP_LONG_SENTENCE_WORDS: int = 40  # sentences longer than this are flagged
+
+# --- Model routing (automatic tier selection; tunables centralized) ---
+# A turn is "trivial" (-> light 8B) only if it is short AND matches a pattern
+# below AND is not a question. Keep this conservative: misrouting up to MID is
+# safe, misrouting a real question down to the 8B is not.
+ROUTER_TRIVIAL_MAX_WORDS: int = 4
+ROUTER_TRIVIAL_PATTERNS: tuple[str, ...] = (
+    "hi", "hello", "hey", "namaste", "thanks", "thank you", "thx", "ty",
+    "ok", "okay", "cool", "great", "got it", "nice", "good morning",
+    "good evening", "good night", "bye", "shukriya", "theek hai",
+)
+# A turn is "complex" (-> reasoning 49B) if it is long OR contains a clearly
+# comparative/decision keyword. Kept narrow on purpose (reasoning is ~27s).
+ROUTER_COMPLEX_MIN_WORDS: int = 40
+ROUTER_COMPLEX_KEYWORDS: tuple[str, ...] = (
+    "vs", "versus", "should i", "trade-off", "tradeoff", "trade off",
+    "compare", "comparison", "pros and cons", "which is better",
+    "better option", "worth it",
+)
+# Tools whose output warrants a deep-reasoning synthesis turn after they run.
+ROUTER_DEEP_TOOLS: frozenset[str] = frozenset({"review_sop"})
+# A light-tier reply this short, empty, or matching a refusal is "weak" and
+# triggers a one-shot retry on the mid tier.
+ROUTER_WEAK_REPLY_MIN_CHARS: int = 12
+ROUTER_REFUSAL_PATTERNS: tuple[str, ...] = (
+    "i can't", "i cannot", "i'm unable", "i am unable",
+    "as an ai", "i'm sorry, but", "i am sorry, but",
+)
