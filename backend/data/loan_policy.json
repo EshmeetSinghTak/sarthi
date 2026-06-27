@@ -1,0 +1,15 @@
+{
+  "data_note": "Indicative Indian education-loan (study-abroad) figures compiled from publicly published lender rate cards and eligibility pages, captured June 2026. Sources: HDFC Credila (https://www.credila.com/education-loan-interest-rates-charges), GyanDhan Credila guide (https://www.gyandhan.com/credila-education-loan), Avanse vs Credila comparison (https://www.lorien.finance/blog/best-education-loan-study-abroad-avanse-credila-comparison), SBI Global Ed-Vantage (https://sbi.bank.in/web/personal-banking/loans/education-loans/global-ed-vantage-scheme), BankBazaar SBI Global Ed-Vantage (https://www.bankbazaar.com/education-loan/sbi-global-ed-vantage-an-overseas-education-loan.html). FOIR and the country rate nudge are standard underwriting norms, not a single lender's published figure. Lenders set actual terms after assessment; these are for guidance only.",
+  "currency": "INR",
+  "unsecured_cap_inr_lakh": 75,
+  "secured_ltv_pct": 90,
+  "secured_max_inr_lakh": 150,
+  "foir_pct": 55,
+  "rate_bands": {
+    "secured": { "low": 9.75, "high": 11.5 },
+    "unsecured": { "low": 10.5, "high": 14.5 }
+  },
+  "country_rate_adjustment_pct": { "US": 0.0, "Canada": 0.0, "default": 0.5 },
+  "moratorium_months_default": 6,
+  "processing_fee_pct": 1.0
+}

@@ -37,3 +37,22 @@ def test_router_tunables_present():
     assert "review_sop" in config.ROUTER_DEEP_TOOLS
     assert config.ROUTER_WEAK_REPLY_MIN_CHARS > 0
     assert any("can't" in p or "cannot" in p for p in config.ROUTER_REFUSAL_PATTERNS)
+
+
+def test_loan_tunables_present():
+    assert config.LOAN_DEFAULT_TENURE_YEARS > 0
+    assert 0 < config.LOAN_STRENGTH_STRONG_EMI_PCT < config.LOAN_STRENGTH_MODERATE_EMI_PCT <= 100
+    assert config.LOAN_POLICY_PATH.exists()
+
+
+def test_loan_policy_file_shape():
+    import json
+    policy = json.loads(config.LOAN_POLICY_PATH.read_text(encoding="utf-8"))
+    for key in (
+        "data_note", "unsecured_cap_inr_lakh", "secured_ltv_pct",
+        "secured_max_inr_lakh", "foir_pct", "rate_bands",
+        "country_rate_adjustment_pct", "moratorium_months_default",
+    ):
+        assert key in policy, key
+    assert policy["rate_bands"]["secured"]["low"] < policy["rate_bands"]["unsecured"]["high"]
+    assert "default" in policy["country_rate_adjustment_pct"]
