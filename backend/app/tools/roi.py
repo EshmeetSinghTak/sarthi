@@ -18,6 +18,7 @@ import json
 from langchain_core.tools import tool
 
 from .. import config
+from ..finance import emi as _emi
 from .shortlist import UNIVERSITIES, _normalize_country, _normalize_field
 
 _SALARY = json.loads(
@@ -31,16 +32,6 @@ LIVING_COST_USD = _SALARY["living_cost_usd_per_year"]
 def _usd_to_inr_lakh(usd: float) -> float:
     """Convert USD to INR lakh using the shared FX constant."""
     return usd / config.USD_PER_INR / 100_000
-
-
-def _emi(principal_inr: float, annual_rate_pct: float, years: int) -> float:
-    """Monthly EMI via standard amortization. Zero/negative rate -> P / months."""
-    months = max(int(years) * 12, 1)
-    if annual_rate_pct <= 0:
-        return principal_inr / months
-    r = annual_rate_pct / 100 / 12
-    growth = (1 + r) ** months
-    return principal_inr * r * growth / (growth - 1)
 
 
 def _prestige_multiplier(competitiveness: int) -> float:

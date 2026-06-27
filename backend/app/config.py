@@ -137,3 +137,10 @@ ROUTER_REFUSAL_PATTERNS: tuple[str, ...] = (
     "i can't", "i cannot", "i'm unable", "i am unable",
     "as an ai", "i'm sorry, but", "i am sorry, but",
 )
+
+# --- F5 Loan Eligibility + Offer (behavior tunables; policy numbers live in
+# data/loan_policy.json, never here) ---
+LOAN_DEFAULT_TENURE_YEARS: int = 10            # typical education-loan tenure
+LOAN_STRENGTH_STRONG_EMI_PCT: float = 40.0     # EMI <= this % of income -> Strong
+LOAN_STRENGTH_MODERATE_EMI_PCT: float = 60.0   # <= this -> Moderate, else Limited
+LOAN_POLICY_PATH = BACKEND_DIR / "data" / "loan_policy.json"
