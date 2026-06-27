@@ -30,6 +30,7 @@ from sse_starlette.sse import EventSourceResponse
 from . import auth, memory, sop_store
 from .agent import build_graph
 from .config import settings
+from .loan import assess_eligibility
 from .tools.sop import analyze_sop
 
 log = logging.getLogger("sarthi")
@@ -156,6 +157,15 @@ class SaveVersionRequest(BaseModel):
     content: str
 
 
+class LoanOfferRequest(BaseModel):
+    loan_amount_inr_lakh: float
+    co_applicant_income_inr_lakh_per_year: float
+    collateral_value_inr_lakh: float = 0.0
+    country: str | None = None
+    tenure_years: int | None = None
+    existing_emi_inr_per_month: float = 0.0
+
+
 def _with_cookie(payload: dict, user_id: str, is_new: bool, status_code: int = 200) -> JSONResponse:
     resp = JSONResponse(payload, status_code=status_code)
     if is_new:
@@ -214,3 +224,15 @@ def sop_get_version(sop_id: int, version_id: int, request: Request):
     if version is None:
         raise HTTPException(status_code=404, detail="Not found")
     return _with_cookie({"version": version}, user_id, is_new)
+
+
+# ---------------------------------------------------------------------------
+# F5 — Loan eligibility + offer
+# ---------------------------------------------------------------------------
+
+
+@app.post("/loan/offer")
+def loan_offer_endpoint(req: LoanOfferRequest, request: Request):
+    user_id, is_new = auth.resolve_user(request)
+    offer = assess_eligibility(**req.model_dump())
+    return _with_cookie({"offer": offer}, user_id, is_new)
