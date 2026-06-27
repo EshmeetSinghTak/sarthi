@@ -14,18 +14,57 @@ Long-term facts (cross-session, per user) live in Chroma. Conversation history
 
 from typing import Annotated, TypedDict
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import (
+    AIMessage,
+    BaseMessage,
+    HumanMessage,
+    SystemMessage,
+    ToolMessage,
+)
+from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
 
-from . import memory
-from .llm import chat_llm, distill_facts
+from . import config, memory, router
+from .llm import distill_facts, llm_light, llm_mid, llm_reasoning
 from .prompts import SYSTEM_PROMPT
+from .router import Tier
 from .tools import estimate_roi, list_my_sops, review_sop, roi_breakdown, shortlist_universities
 
 TOOLS = [shortlist_universities, estimate_roi, roi_breakdown, review_sop, list_my_sops]
-_llm_with_tools = chat_llm.bind_tools(TOOLS)
+# Tools bound to the tiers that can use them. Light (8B) stays tool-less.
+_mid_tools = llm_mid.bind_tools(TOOLS)
+_reasoning_tools = llm_reasoning.bind_tools(TOOLS)
+
+# Tier -> the label the frontend shows on each reply.
+_TIER_LABEL = {Tier.LIGHT: "fast", Tier.MID: "standard", Tier.REASONING: "deep"}
+
+
+def llm_for_tier(tier: Tier):
+    if tier is Tier.LIGHT:
+        return llm_light
+    if tier is Tier.REASONING:
+        return _reasoning_tools
+    return _mid_tools
+
+
+def _just_ran_deep_tool(messages: list[BaseMessage]) -> bool:
+    """True if a deep tool produced output since the last user message."""
+    for m in reversed(messages):
+        if isinstance(m, HumanMessage):
+            return False
+        if isinstance(m, ToolMessage) and getattr(m, "name", None) in config.ROUTER_DEEP_TOOLS:
+            return True
+    return False
+
+
+def _emit_tier(tier: Tier) -> None:
+    """Tell the client which tier is answering (best-effort; no-op off-stream)."""
+    try:
+        get_stream_writer()({"tier": _TIER_LABEL[tier]})
+    except Exception:
+        pass
 
 
 class AgentState(TypedDict):
@@ -56,7 +95,32 @@ async def agent_node(state: AgentState) -> dict:
             f"conversations):\n{known}\n\nUse this naturally; don't recite it back."
         )
     prompt = [SystemMessage(content=system), *state["messages"]]
-    reply = await _llm_with_tools.ainvoke(prompt)
+
+    tier = router.choose_tier(
+        _last_human(state["messages"]), _just_ran_deep_tool(state["messages"])
+    )
+    _emit_tier(tier)
+
+    try:
+        reply = await llm_for_tier(tier).ainvoke(prompt)
+    except Exception:
+        # A slow-tier failure must never dead-end a turn — fall back to mid.
+        if tier is Tier.REASONING:
+            tier = Tier.MID
+            _emit_tier(tier)
+            reply = await _mid_tools.ainvoke(prompt)
+        else:
+            raise
+
+    # Reactive light -> mid: the 8B answered something weak, retry on the 70B.
+    if (
+        tier is Tier.LIGHT
+        and not getattr(reply, "tool_calls", None)
+        and router.is_weak_reply(str(reply.content))
+    ):
+        _emit_tier(Tier.MID)
+        reply = await _mid_tools.ainvoke(prompt)
+
     return {"messages": [reply]}
 
 
