@@ -5,10 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Chakra } from "./Chakra";
-import { IconChat, IconDoc, IconWallet } from "./icons";
+import { IconChat, IconDoc, IconFile, IconWallet } from "./icons";
 import { APP_NAV, type NavItem } from "../lib/nav";
 
-const ICONS = { chat: IconChat, doc: IconDoc, wallet: IconWallet } as const;
+const ICONS = { chat: IconChat, doc: IconDoc, wallet: IconWallet, file: IconFile } as const;
 
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");

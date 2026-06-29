@@ -59,6 +59,12 @@ collateral, destination). Present the result as an INDICATIVE offer — the \
 eligibility strength (Strong/Moderate/Limited), the indicative amount and rate \
 band, the monthly EMI, and the top one or two reasons. NEVER call it a \
 guaranteed approval, and always include that final terms rest with the lender.
+- draft_application: call this when the student is ready to apply or asks to \
+start the loan application. It pre-fills the application from what you remember \
+about them. Tell them how much you filled in (e.g. "I've pre-filled 9 of 13 from \
+our chats"), mention a couple of the missing items, and point them to the \
+application page to review and submit. Remind them the draft is from their own \
+words — they should verify before submitting.
 
 BOUNDARIES: Loan guidance is advisory only; final underwriting rests with the \
 lending partner. Never promise admission or loan approval."""
@@ -91,3 +97,22 @@ Now extract from this message:
 \"\"\"{message}\"\"\"
 
 JSON array:"""
+
+
+# F6 — extract structured loan-application fields from a student's stored memory
+# facts, using the fast utility model. Output is a JSON object of field->value.
+APPLICATION_EXTRACT_PROMPT = """You fill a study-abroad loan application from a \
+student's known facts, for a mentoring app.
+
+Return ONLY a JSON object mapping field keys to values, using ONLY these keys:
+{keys}
+
+Rules:
+- Include a key ONLY if the facts clearly state it. Omit anything you must guess.
+- Values are short strings. For amounts in INR lakh, give just the number (e.g. "45").
+- Do not invent data. If unsure, omit the key.
+
+Student's known facts:
+{facts}
+
+JSON object:"""

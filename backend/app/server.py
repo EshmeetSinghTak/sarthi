@@ -17,6 +17,7 @@ enter it in the lifespan and compile the graph once.
 
 import logging
 import os
+import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
@@ -27,7 +28,7 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
-from . import auth, memory, sop_store
+from . import app_store, application, auth, memory, sop_store
 from .agent import build_graph
 from .config import settings
 from .loan import assess_eligibility
@@ -42,6 +43,7 @@ async def lifespan(app: FastAPI):
     global _graph
     settings.require_key()
     sop_store.init_db()
+    app_store.init_db()
     async with AsyncSqliteSaver.from_conn_string(settings.checkpoint_db) as saver:
         _graph = build_graph(saver)
         yield
@@ -166,6 +168,11 @@ class LoanOfferRequest(BaseModel):
     existing_emi_inr_per_month: float = 0.0
 
 
+class ApplicationSaveRequest(BaseModel):
+    fields: dict
+    documents: dict
+
+
 def _with_cookie(payload: dict, user_id: str, is_new: bool, status_code: int = 200) -> JSONResponse:
     resp = JSONResponse(payload, status_code=status_code)
     if is_new:
@@ -236,3 +243,46 @@ def loan_offer_endpoint(req: LoanOfferRequest, request: Request):
     user_id, is_new = auth.resolve_user(request)
     offer = assess_eligibility(**req.model_dump())
     return _with_cookie({"offer": offer}, user_id, is_new)
+
+
+# ---------------------------------------------------------------------------
+# F6 — Document auto-fill (loan application)
+# ---------------------------------------------------------------------------
+
+
+@app.get("/application")
+def application_get(request: Request):
+    user_id, is_new = auth.resolve_user(request)
+    stored = app_store.get_or_create(user_id, lambda: application.build_draft(user_id))
+    return _with_cookie({"application": application.public_view(stored)}, user_id, is_new)
+
+
+@app.put("/application")
+def application_save(req: ApplicationSaveRequest, request: Request):
+    user_id, is_new = auth.resolve_user(request)
+    app_store.get_or_create(user_id, lambda: application.build_draft(user_id))
+    stored = app_store.save(user_id, req.fields, req.documents)
+    if stored is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    return _with_cookie({"application": application.public_view(stored)}, user_id, is_new)
+
+
+@app.post("/application/submit")
+def application_submit(request: Request):
+    user_id, is_new = auth.resolve_user(request)
+    app_store.get_or_create(user_id, lambda: application.build_draft(user_id))
+    reference = "SARTHI-" + uuid.uuid4().hex[:6].upper()
+    stored = app_store.submit(user_id, reference)
+    if stored is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    return _with_cookie({"application": application.public_view(stored)}, user_id, is_new)
+
+
+@app.post("/application/reset")
+def application_reset(request: Request):
+    # Start over: discard the current (possibly submitted) draft and rebuild a
+    # fresh one from the user's current memory facts.
+    user_id, is_new = auth.resolve_user(request)
+    app_store.delete(user_id)
+    stored = app_store.get_or_create(user_id, lambda: application.build_draft(user_id))
+    return _with_cookie({"application": application.public_view(stored)}, user_id, is_new)
