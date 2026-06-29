@@ -27,7 +27,7 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
-from . import auth, memory, sop_store
+from . import app_store, auth, memory, sop_store
 from .agent import build_graph
 from .config import settings
 from .loan import assess_eligibility
@@ -42,6 +42,7 @@ async def lifespan(app: FastAPI):
     global _graph
     settings.require_key()
     sop_store.init_db()
+    app_store.init_db()
     async with AsyncSqliteSaver.from_conn_string(settings.checkpoint_db) as saver:
         _graph = build_graph(saver)
         yield
