@@ -56,3 +56,21 @@ def test_loan_policy_file_shape():
         assert key in policy, key
     assert policy["rate_bands"]["secured"]["low"] < policy["rate_bands"]["unsecured"]["high"]
     assert "default" in policy["country_rate_adjustment_pct"]
+
+
+def test_application_paths_present():
+    assert config.APPLICATION_SCHEMA_PATH.exists()
+    assert config.APPLICATION_DB_PATH
+
+
+def test_application_schema_shape():
+    import json
+    schema = json.loads(config.APPLICATION_SCHEMA_PATH.read_text(encoding="utf-8"))
+    assert schema["sections"] and schema["documents"]
+    for section in schema["sections"]:
+        assert section["key"] and section["title"]
+        for f in section["fields"]:
+            assert {"key", "label", "type", "extractable", "required"} <= set(f)
+    fields = [f for s in schema["sections"] for f in s["fields"]]
+    assert any(f["extractable"] for f in fields)
+    assert any(not f["extractable"] for f in fields)

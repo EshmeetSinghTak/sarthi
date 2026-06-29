@@ -1,0 +1,47 @@
+{
+  "note": "Fields SARTHI drafts from the student's own messages; verify before use.",
+  "sections": [
+    {
+      "key": "personal",
+      "title": "Personal",
+      "fields": [
+        {"key": "full_name", "label": "Full name", "type": "text", "extractable": true, "required": true},
+        {"key": "date_of_birth", "label": "Date of birth", "type": "date", "extractable": false, "required": true},
+        {"key": "city", "label": "City", "type": "text", "extractable": true, "required": false},
+        {"key": "phone", "label": "Phone", "type": "tel", "extractable": false, "required": true},
+        {"key": "email", "label": "Email", "type": "email", "extractable": false, "required": true}
+      ]
+    },
+    {
+      "key": "academic",
+      "title": "Academic",
+      "fields": [
+        {"key": "current_degree", "label": "Current degree", "type": "text", "extractable": true, "required": false},
+        {"key": "institution", "label": "Current institution", "type": "text", "extractable": true, "required": false},
+        {"key": "cgpa", "label": "CGPA / %", "type": "text", "extractable": true, "required": false},
+        {"key": "target_course", "label": "Target course", "type": "text", "extractable": true, "required": true},
+        {"key": "target_country", "label": "Target country", "type": "text", "extractable": true, "required": true},
+        {"key": "target_universities", "label": "Target universities", "type": "text", "extractable": true, "required": false}
+      ]
+    },
+    {
+      "key": "financial",
+      "title": "Loan & co-applicant",
+      "fields": [
+        {"key": "loan_amount_inr_lakh", "label": "Loan amount (₹ lakh)", "type": "number", "extractable": true, "required": true},
+        {"key": "co_applicant_name", "label": "Co-applicant name", "type": "text", "extractable": false, "required": true},
+        {"key": "co_applicant_relation", "label": "Co-applicant relation", "type": "text", "extractable": false, "required": true},
+        {"key": "co_applicant_income_inr_lakh", "label": "Co-applicant income / yr (₹ lakh)", "type": "number", "extractable": true, "required": true},
+        {"key": "collateral_value_inr_lakh", "label": "Collateral value (₹ lakh)", "type": "number", "extractable": true, "required": false}
+      ]
+    }
+  ],
+  "documents": [
+    {"key": "passport", "label": "Passport"},
+    {"key": "marksheets", "label": "Academic marksheets"},
+    {"key": "admission_letter", "label": "Admission / offer letter"},
+    {"key": "income_proof", "label": "Co-applicant income proof"},
+    {"key": "coapplicant_kyc", "label": "Co-applicant KYC (PAN / Aadhaar)"},
+    {"key": "bank_statements", "label": "Bank statements (6 months)"}
+  ]
+}

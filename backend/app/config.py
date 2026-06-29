@@ -144,3 +144,7 @@ LOAN_DEFAULT_TENURE_YEARS: int = 10            # typical education-loan tenure
 LOAN_STRENGTH_STRONG_EMI_PCT: float = 40.0     # EMI <= this % of income -> Strong
 LOAN_STRENGTH_MODERATE_EMI_PCT: float = 60.0   # <= this -> Moderate, else Limited
 LOAN_POLICY_PATH = BACKEND_DIR / "data" / "loan_policy.json"
+
+# --- F6 Document Auto-Fill (application schema + draft store) ---
+APPLICATION_SCHEMA_PATH = BACKEND_DIR / "data" / "application_schema.json"
+APPLICATION_DB_PATH: str = os.getenv("SARTHI_APPLICATION_DB", str(BACKEND_DIR / "sarthi_application.db"))
