@@ -91,3 +91,22 @@ Now extract from this message:
 \"\"\"{message}\"\"\"
 
 JSON array:"""
+
+
+# F6 — extract structured loan-application fields from a student's stored memory
+# facts, using the fast utility model. Output is a JSON object of field->value.
+APPLICATION_EXTRACT_PROMPT = """You fill a study-abroad loan application from a \
+student's known facts, for a mentoring app.
+
+Return ONLY a JSON object mapping field keys to values, using ONLY these keys:
+{keys}
+
+Rules:
+- Include a key ONLY if the facts clearly state it. Omit anything you must guess.
+- Values are short strings. For amounts in INR lakh, give just the number (e.g. "45").
+- Do not invent data. If unsure, omit the key.
+
+Student's known facts:
+{facts}
+
+JSON object:"""
