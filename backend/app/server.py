@@ -276,3 +276,13 @@ def application_submit(request: Request):
     if stored is None:
         raise HTTPException(status_code=404, detail="Not found")
     return _with_cookie({"application": application.public_view(stored)}, user_id, is_new)
+
+
+@app.post("/application/reset")
+def application_reset(request: Request):
+    # Start over: discard the current (possibly submitted) draft and rebuild a
+    # fresh one from the user's current memory facts.
+    user_id, is_new = auth.resolve_user(request)
+    app_store.delete(user_id)
+    stored = app_store.get_or_create(user_id, lambda: application.build_draft(user_id))
+    return _with_cookie({"application": application.public_view(stored)}, user_id, is_new)

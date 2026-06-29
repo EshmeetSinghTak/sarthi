@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { Chakra } from "../../../components/Chakra";
@@ -9,6 +10,7 @@ import { container, item } from "../../../lib/motion";
 import {
   type Application,
   getApplication,
+  resetApplication,
   saveApplication,
   submitApplication,
 } from "../../../lib/application";
@@ -49,6 +51,20 @@ export default function ApplyWorkspace() {
     }
   }, [app, busy]);
 
+  const startNew = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      setApp(await resetApplication());
+      setSavedAt(null);
+    } catch {
+      setError("Couldn't start a new application. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const submit = async () => {
     if (!app || busy) return;
     setBusy(true);
@@ -87,6 +103,30 @@ export default function ApplyWorkspace() {
           This is a demo submission (integration-ready); nothing was sent to a lender. Final
           eligibility and approval rest with the lending partner after verification.
         </p>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <button
+            onClick={startNew}
+            disabled={busy}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-saffron/50 px-5 py-2.5 text-sm font-medium text-saffron transition-colors hover:bg-saffron/10 disabled:opacity-60"
+          >
+            {busy ? <Chakra rolling size={18} /> : null}
+            Start a new application
+          </button>
+          <Link
+            href="/chat"
+            className="inline-flex min-h-11 items-center rounded-full bg-saffron px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-saffron-deep"
+          >
+            Back to chat
+          </Link>
+        </div>
+        <AnimatePresence>
+          {error && (
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              role="alert" className="mt-4 text-sm text-saffron-deep">
+              {error}
+            </motion.p>
+          )}
+        </AnimatePresence>
       </div>
     );
   }

@@ -34,3 +34,6 @@ export const saveApplication = (fields: Record<string, string>, documents: Recor
 
 export const submitApplication = () =>
   fetch(`${BASE}/application/submit`, { method: "POST", credentials: "include" }).then(j);
+
+export const resetApplication = () =>
+  fetch(`${BASE}/application/reset`, { method: "POST", credentials: "include" }).then(j);

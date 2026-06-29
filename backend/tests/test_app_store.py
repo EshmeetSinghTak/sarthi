@@ -40,6 +40,15 @@ def test_submit_sets_status_and_reference(tmp_path, monkeypatch):
     assert done["reference"] == "SARTHI-ABC123"
 
 
+def test_delete_removes_row(tmp_path, monkeypatch):
+    monkeypatch.setattr(app_store.config, "APPLICATION_DB_PATH", str(tmp_path / "a.db"))
+    app_store.init_db()
+    app_store.get_or_create("u1", _builder)
+    assert app_store.delete("u1") is True
+    assert app_store.get("u1") is None
+    assert app_store.delete("u1") is False  # nothing left to delete
+
+
 def test_isolation_between_users(tmp_path, monkeypatch):
     monkeypatch.setattr(app_store.config, "APPLICATION_DB_PATH", str(tmp_path / "a.db"))
     app_store.init_db()

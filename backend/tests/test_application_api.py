@@ -23,3 +23,11 @@ def test_get_creates_and_put_saves_and_submit(monkeypatch):
         out = sub.json()["application"]
         assert out["status"] == "submitted"
         assert out["reference"].startswith("SARTHI-")
+
+        # Reset returns a fresh draft (no longer submitted, no stale edits).
+        reset = client.post("/application/reset")
+        assert reset.status_code == 200
+        fresh = reset.json()["application"]
+        assert fresh["status"] == "draft"
+        assert fresh["reference"] is None
+        assert fresh["fields"].get("city", "") == ""

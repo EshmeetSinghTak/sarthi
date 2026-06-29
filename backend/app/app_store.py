@@ -114,6 +114,21 @@ def save(user_id: str, fields: dict, documents: dict) -> dict | None:
     return get(user_id)
 
 
+def delete(user_id: str) -> bool:
+    """Remove this user's application row. Returns True if a row was deleted.
+
+    Used by "start a new application": after delete, get_or_create rebuilds a
+    fresh draft from the user's current memory facts.
+    """
+    conn = _connect()
+    try:
+        cur = conn.execute("DELETE FROM applications WHERE user_id = ?", (user_id,))
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
 def submit(user_id: str, reference: str) -> dict | None:
     conn = _connect()
     try:
