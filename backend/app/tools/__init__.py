@@ -1,5 +1,6 @@
 """Agent tools (F2+)."""
 
+from .application import draft_application
 from .loan import loan_offer
 from .roi import estimate_roi, roi_breakdown
 from .shortlist import shortlist_universities
@@ -12,4 +13,5 @@ __all__ = [
     "review_sop",
     "list_my_sops",
     "loan_offer",
+    "draft_application",
 ]

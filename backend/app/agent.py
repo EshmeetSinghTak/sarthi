@@ -31,6 +31,7 @@ from .llm import distill_facts, llm_light, llm_mid, llm_reasoning
 from .prompts import SYSTEM_PROMPT
 from .router import Tier
 from .tools import (
+    draft_application,
     estimate_roi,
     list_my_sops,
     loan_offer,
@@ -39,7 +40,15 @@ from .tools import (
     shortlist_universities,
 )
 
-TOOLS = [shortlist_universities, estimate_roi, roi_breakdown, review_sop, list_my_sops, loan_offer]
+TOOLS = [
+    shortlist_universities,
+    estimate_roi,
+    roi_breakdown,
+    review_sop,
+    list_my_sops,
+    loan_offer,
+    draft_application,
+]
 # Tools bound to the tiers that can use them. Light (8B) stays tool-less.
 _mid_tools = llm_mid.bind_tools(TOOLS)
 _reasoning_tools = llm_reasoning.bind_tools(TOOLS)
