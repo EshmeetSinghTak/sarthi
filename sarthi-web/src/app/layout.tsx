@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter, Noto_Serif_Devanagari } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -39,6 +41,8 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-ink text-cream">
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
