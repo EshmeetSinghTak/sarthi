@@ -8,7 +8,6 @@ import {
   IconFile,
   IconList,
   IconPen,
-  IconShare,
   IconWallet,
 } from "../icons";
 import { container, item } from "../../lib/motion";
@@ -21,7 +20,6 @@ const ICONS: Record<FeatureIcon, (p: { className?: string }) => React.JSX.Elemen
   pen: IconPen,
   wallet: IconWallet,
   file: IconFile,
-  share: IconShare,
 };
 
 export function FeatureGrid() {
@@ -32,7 +30,7 @@ export function FeatureGrid() {
           One agent, the whole journey.
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-balance text-center text-muted">
-          Seven capabilities — four live today, three on the road ahead.
+          Six capabilities, all live today.
         </p>
         <motion.ul
           variants={container}

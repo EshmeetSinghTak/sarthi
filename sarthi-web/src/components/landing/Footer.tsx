@@ -30,7 +30,6 @@ export function Footer() {
         <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
           <Link href="/chat" className="text-muted transition-colors hover:text-cream">Chat</Link>
           <Link href="/sop" className="text-muted transition-colors hover:text-cream">SOP Workspace</Link>
-          <span className="text-xs text-muted">MIT · built with free NVIDIA models</span>
         </div>
       </div>
     </footer>
