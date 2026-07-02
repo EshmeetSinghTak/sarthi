@@ -47,3 +47,12 @@ build/
 .vercel
 .env.local
 .env*.local
+
+# ---- Local-only: dev/AI-process & pitch artifacts (kept locally, not published) ----
+CLAUDE.md
+AGENTS.md
+/docs/superpowers/
+/SARTHI.pptx
+/PPT-SLIDES.md
+/build_deck.py
+/TODO.md
