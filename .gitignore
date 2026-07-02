@@ -42,3 +42,8 @@ Thumbs.db
 # ---- Build artifacts ----
 dist/
 build/
+
+# ---- Vercel ----
+.vercel
+.env.local
+.env*.local
