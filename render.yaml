@@ -1,0 +1,33 @@
+# Render Blueprint for the SARTHI agent backend (FastAPI + LangGraph).
+#
+# Deploy: Render Dashboard → New → Blueprint → pick this repo. Render reads this
+# file, provisions the service, and prompts for the secret env vars below
+# (marked `sync: false`) — enter their values in the dashboard. Secret VALUES
+# are NEVER stored in this file or in git.
+#
+# Note (free tier): the disk is ephemeral and the service sleeps after ~15 min
+# idle, so the SQLite conversation history and Chroma long-term memory reset on
+# each restart/redeploy. Fine for a public demo; add a paid persistent disk for
+# durable memory.
+services:
+  - type: web
+    name: sarthi-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      # Pinned to a Render-supported Python with prebuilt wheels for all deps
+      # (the repo is built on 3.14 locally, but 3.12 installs cleanly on Linux).
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      # --- secrets: set these VALUES in the Render dashboard, not here ---
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: SARTHI_SECRET_KEY
+        sync: false
+      # --- production behaviour ---
+      - key: SARTHI_COOKIE_SECURE
+        value: "true"
