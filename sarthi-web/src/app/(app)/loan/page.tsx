@@ -29,6 +29,7 @@ function Field({
       <div className="mt-1 flex items-center gap-2 rounded-xl border border-ink-3 bg-ink-2 px-3 focus-within:border-saffron/60">
         <input
           type="number"
+          inputMode="decimal"
           value={Number.isNaN(value) ? "" : value}
           min={min}
           step={step}
@@ -210,17 +211,19 @@ export default function LoanWorkspace() {
         )}
       </AnimatePresence>
 
-      {offer ? (
-        <OfferCard offer={offer} />
-      ) : (
-        <div className="aura-saffron grid place-items-center rounded-2xl border border-dashed border-ink-3 bg-ink-2/40 p-10 text-center">
-          <Chakra size={36} />
-          <p className="mt-4 max-w-sm text-sm text-muted">
-            Enter your details and SARTHI will show an indicative amount, rate band, and EMI —
-            with the reasons behind it.
-          </p>
-        </div>
-      )}
+      <div aria-live="polite">
+        {offer ? (
+          <OfferCard offer={offer} />
+        ) : (
+          <div className="aura-saffron grid place-items-center rounded-2xl border border-dashed border-ink-3 bg-ink-2/40 p-10 text-center">
+            <Chakra size={36} />
+            <p className="mt-4 max-w-sm text-sm text-muted">
+              Enter your details and SARTHI will show an indicative amount, rate band, and EMI —
+              with the reasons behind it.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

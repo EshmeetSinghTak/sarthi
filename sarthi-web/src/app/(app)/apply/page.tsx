@@ -15,6 +15,16 @@ import {
   submitApplication,
 } from "../../../lib/application";
 
+/** Map schema field keys to browser autofill tokens so the OS can offer values. */
+const AUTOCOMPLETE: Record<string, string> = {
+  full_name: "name",
+  name: "name",
+  email: "email",
+  phone: "tel",
+  city: "address-level2",
+  dob: "bday",
+};
+
 export default function ApplyWorkspace() {
   const [app, setApp] = useState<Application | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -105,16 +115,17 @@ export default function ApplyWorkspace() {
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <button
+            type="button"
             onClick={startNew}
             disabled={busy}
-            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-saffron/50 px-5 py-2.5 text-sm font-medium text-saffron transition-colors hover:bg-saffron/10 disabled:opacity-60"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-saffron/50 px-5 py-2.5 text-sm font-medium text-saffron transition-colors hover:bg-saffron/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/60 disabled:opacity-60"
           >
             {busy ? <Chakra rolling size={18} /> : null}
             Start a new application
           </button>
           <Link
             href="/chat"
-            className="inline-flex min-h-11 items-center rounded-full bg-saffron px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-saffron-deep"
+            className="inline-flex min-h-11 items-center rounded-full bg-saffron px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-saffron-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/70"
           >
             Back to chat
           </Link>
@@ -135,6 +146,12 @@ export default function ApplyWorkspace() {
   const missingRequired = required.filter((f) => !String(app.fields[f.key] ?? "").trim());
   const canSubmit = missingRequired.length === 0 && !busy;
 
+  const pct = app.completeness.total
+    ? Math.round((app.completeness.filled / app.completeness.total) * 100)
+    : 0;
+  const docTotal = app.schema.documents.length;
+  const docsReady = app.schema.documents.filter((d) => app.documents[d.key]).length;
+
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-6">
       <motion.div variants={container} initial="hidden" animate="show">
@@ -148,6 +165,27 @@ export default function ApplyWorkspace() {
           </span>{" "}
           fields from your chats. Review every field, fill the gaps, and submit.
         </motion.p>
+        <motion.div variants={item} className="mt-4">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted">Pre-filled from your chats</span>
+            <span className="tabular-nums text-cream">{pct}%</span>
+          </div>
+          <div
+            className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-ink-3"
+            role="progressbar"
+            aria-valuenow={pct}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Application pre-fill progress"
+          >
+            <motion.div
+              className="h-full rounded-full bg-saffron"
+              initial={{ width: 0 }}
+              animate={{ width: `${pct}%` }}
+              transition={{ type: "spring", stiffness: 120, damping: 22 }}
+            />
+          </div>
+        </motion.div>
       </motion.div>
 
       {app.schema.sections.map((section) => (
@@ -159,17 +197,23 @@ export default function ApplyWorkspace() {
               const fromChats = app.ai_filled.includes(f.key) && String(value).trim() !== "";
               return (
                 <label key={f.key} className="block">
-                  <span className="flex items-center justify-between text-sm text-muted">
+                  <span className="flex items-center justify-between gap-2 text-sm text-muted">
                     <span>{f.label}{f.required && <span className="text-saffron-deep"> *</span>}</span>
-                    <span className={`text-[10px] ${fromChats ? "text-saffron" : "text-muted"}`}>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        fromChats ? "bg-saffron/15 text-saffron" : "bg-ink-3 text-muted"
+                      }`}
+                    >
                       {fromChats ? "from your chats" : "needs input"}
                     </span>
                   </span>
                   <input
                     type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
+                    inputMode={f.type === "number" ? "numeric" : undefined}
+                    autoComplete={AUTOCOMPLETE[f.key]}
                     value={value}
                     onChange={(e) => setField(f.key, e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-ink-3 bg-ink-2 px-3 py-2.5 text-cream outline-none focus:border-saffron/60"
+                    className="mt-1 w-full rounded-xl border border-ink-3 bg-ink-2 px-3 py-2.5 text-cream outline-none transition-colors focus:border-saffron/60"
                   />
                 </label>
               );
@@ -179,36 +223,48 @@ export default function ApplyWorkspace() {
       ))}
 
       <div className="rounded-2xl border border-ink-3 bg-ink-2/40 p-5">
-        <h2 className="font-display text-lg font-semibold">Documents to keep ready</h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-display text-lg font-semibold">Documents to keep ready</h2>
+          <span className="shrink-0 text-xs tabular-nums text-muted">{docsReady} of {docTotal} ready</span>
+        </div>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {app.schema.documents.map((d) => (
-            <button
-              key={d.key}
-              onClick={() => toggleDoc(d.key)}
-              className="flex items-center gap-2 rounded-xl border border-ink-3 px-3 py-2.5 text-left text-sm transition-colors hover:border-saffron/40"
-            >
-              <span className={`grid size-5 place-items-center rounded ${app.documents[d.key] ? "bg-saffron text-ink" : "bg-ink-3 text-muted"}`}>
-                {app.documents[d.key] && <IconCheck className="size-3.5" />}
-              </span>
-              <span className={app.documents[d.key] ? "text-cream" : "text-muted"}>{d.label}</span>
-            </button>
-          ))}
+          {app.schema.documents.map((d) => {
+            const checked = !!app.documents[d.key];
+            return (
+              <button
+                key={d.key}
+                type="button"
+                onClick={() => toggleDoc(d.key)}
+                aria-pressed={checked}
+                className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-left text-sm transition-colors active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/60 ${
+                  checked ? "border-saffron/40 bg-saffron/5" : "border-ink-3 hover:border-saffron/40"
+                }`}
+              >
+                <span className={`grid size-5 place-items-center rounded ${checked ? "bg-saffron text-ink" : "bg-ink-3 text-muted"}`}>
+                  {checked && <IconCheck className="size-3.5" />}
+                </span>
+                <span className={checked ? "text-cream" : "text-muted"}>{d.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <button
+          type="button"
           onClick={save}
           disabled={busy}
-          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-saffron/50 px-5 py-2.5 text-sm font-medium text-saffron transition-colors hover:bg-saffron/10 disabled:opacity-60"
+          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-saffron/50 px-5 py-2.5 text-sm font-medium text-saffron transition-colors hover:bg-saffron/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/60 disabled:opacity-60"
         >
           {busy ? <Chakra rolling size={18} /> : null}
           Save draft
         </button>
         <button
+          type="button"
           onClick={submit}
           disabled={!canSubmit}
-          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-saffron px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-saffron-deep disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-saffron px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-saffron-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-saffron/70 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <IconFile className="size-4" />
           Submit application
